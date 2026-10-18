@@ -317,6 +317,34 @@ export interface CanvasGraph {
 }
 
 // ---------------------------------------------------------------------------
+// 四维逐帧拉片
+// ---------------------------------------------------------------------------
+
+/** 拉片维度：叙事分镜 / 精彩运镜 / 动作片段 / 音频参考 */
+export type BreakdownDimension = "narrative" | "camera" | "action" | "audio";
+
+export const BREAKDOWN_DIMENSION_LABELS: Record<BreakdownDimension, string> = {
+  narrative: "叙事分镜",
+  camera: "精彩运镜",
+  action: "动作片段",
+  audio: "音频参考",
+};
+
+export interface BreakdownNote {
+  id: string;
+  /** 时间点（毫秒） */
+  timeMs: number;
+  text: string;
+}
+
+export type FrameBreakdown = Record<BreakdownDimension, BreakdownNote[]>;
+
+/** 空拉片 */
+export function emptyBreakdown(): FrameBreakdown {
+  return { narrative: [], camera: [], action: [], audio: [] };
+}
+
+// ---------------------------------------------------------------------------
 // OpenAPI 会话协议（兼容 libtv-skills）
 // ---------------------------------------------------------------------------
 
@@ -429,6 +457,7 @@ export interface DolaImageTask {
   ratio: DolaRatio;
   accountId: string;
   status: DolaTaskStatus;
+  conversationId?: string;
   imageUrl?: string;
   quotaCost?: number;
   error?: string;
