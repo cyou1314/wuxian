@@ -34,6 +34,8 @@ LibTV 形态 × Dola 生成引擎 × 多账号额度控制。
 
 ## 状态
 
-2026-10-18：项目立项，统一方向为 LibTV 形态 × Dola 引擎。Phase 1 已完成并推送：
-项目骨架 + 类型契约 + prompt-compiler + autolink-engine + dag-scheduler + dola-engine，
-`tsc --noEmit` 零错误。下一步 Phase 2（画布 Store）。
+2026-10-18：项目立项，统一方向为 LibTV 形态 × Dola 引擎。Phase 1–6 代码全部完成并推送：
+类型契约、7+5 提示词编译器、AutoLink、DAG 调度、Dola 引擎（含多账号额度池与执行器）、
+画布 Store（种子：顾长宁×师姐 9 镜分镜表）、8 节点 + 2 边组件、工作台主页面、TV Director、
+4 个 OpenAPI 路由。`tsc --noEmit` 零错误，`next build` 一次通过，API 闭环实测通过。
+待用户决策：P6 端到端真实生成的执行环境（用户 Mac 家宽 IP / 另行安排）。

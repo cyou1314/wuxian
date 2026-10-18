@@ -16,13 +16,20 @@
       IndexedDB 持久化；预置双角色顾长宁×师姐 + 9 镜完整 17 列分镜表 + 分镜/视频节点初始图谱，
       21 节点 29 边；expandStoryboard 行列布局展开、touchNode 级联 stale、autoLinkNode、
       OpenAPI 会话消息均运行时验证通过）
-- [ ] **Phase 3**：8 种自定义节点组件 + 2 种自定义边组件（@xyflow/react v12）
-- [ ] **Phase 4**：GridSplitterModal（可拖拽分割线宫格切分）、FrameBreakdownModal（四维拉片）、
-      DirectorInspectorDrawer（AST/Raw 双模精修台）
-- [ ] **Phase 5**：InfiniteCanvasWorkbench 主页面 + `/api/openapi/*` 4 个后端路由
-      （session 创建/增量拉取/change-project/文件上传），画布交互与 API 闭环验证
-- [ ] **Phase 6（Dola 引擎线）**：executor 真实页面上下文通道打通（Electron webview 或真实浏览器），
-      端到端视频生成验证（需用户确认消耗一次额度）；图片 ability_param 内层 schema 抓包确认
+- [x] **Phase 3**（2026-10-18）：8 种自定义节点组件（角色造型室/剧本编辑/17列分镜表/分镜画面/视频生成/图层分离/3D-BOX/智能剪辑）
+      + 2 种自定义边（数据流光边/AutoLink 引用边）+ NodeShell 外壳 + useUIStore + useTaskStore 任务队列
+- [x] **Phase 4**（2026-10-18）：`src/lib/grid-slicer.ts`（可拖拽分割线裁切数学库）+
+      GridSplitterModal（2×2/3×3 拖拽切分 → 批量生成子节点）+ FrameBreakdownModal（四维拉片，store 持久化）+
+      DirectorInspectorDrawer（7/5 段 AST 表单与 Raw 双模精修台，应用后级联 stale）
+- [x] **Phase 5**（2026-10-18）：InfiniteCanvasWorkbench（视口虚拟化/Minimap/双击建节点/Delete/方向键微调/
+      Shift 框选/Ctrl+C/V 复制粘贴/撤销重做/资产抽屉/Dola 账号面板/任务队列/导出）+
+      `src/lib/tv-director-agent.ts`（auto/plan 双模式）+ 4 个 OpenAPI 路由（session 创建与追加/
+      增量拉取/change-project/文件上传，Bearer 鉴权）。
+      `next build` 一次通过；4 路由 + 401 鉴权 + 首页全部实测通过。
+- [x] **Phase 6（Dola 引擎线·代码完成）**：`src/lib/dola-executor.ts`（按账号剩余额度 draining 队列：
+      选号→提交→轮询→取无水印直链→回写额度），工作台"按额度执行队列"按钮已接线。
+      ⏳ 待用户决策后验证：端到端真实生成需在已登录真实页面上下文或家宽出口执行（VM 机房出口会被 710022002 拦截）；
+      图片结果回取（draw_result）待一次带响应抓包确认。
 
 ## 待用户决策
 

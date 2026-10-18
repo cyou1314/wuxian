@@ -11,3 +11,33 @@ body {
   background: var(--canvas-bg);
   color: #e8eaf0;
 }
+
+/* 数据流边流光动画 */
+.edge-flow {
+  stroke-dasharray: 10 7;
+  animation: edge-dash-flow 0.9s linear infinite;
+}
+@keyframes edge-dash-flow {
+  to {
+    stroke-dashoffset: -17;
+  }
+}
+
+/* React Flow 暗色主题微调 */
+.react-flow__minimap {
+  background: #12151d !important;
+  border: 1px solid #2a2f3d;
+  border-radius: 8px;
+}
+.react-flow__controls {
+  border: 1px solid #2a2f3d;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.react-flow__controls-button {
+  background: #12151d !important;
+  border-bottom: 1px solid #2a2f3d !important;
+}
+.react-flow__controls-button svg {
+  fill: #94a3b8 !important;
+}
