@@ -12,8 +12,10 @@
       `src/lib/dag-scheduler.ts`（Kahn 拓扑排序 + stale 级联传播）、
       `src/lib/dola-engine.ts`（Dola 客户端：提交/轮询/取链/额度解析/多账号额度池）。
       `tsc --noEmit` 零错误；7+5 公式 round-trip、AutoLink、拓扑排序运行时验证通过。
-- [ ] **Phase 2**：`src/store/useCanvasStore.ts`（zustand + immer + zundo 50 步历史 +
-      IndexedDB/SQLite 双持久化；预置双角色 + 9 镜 17 列分镜表 + 分镜/视频节点初始图谱）
+- [x] **Phase 2**（2026-10-18）：`src/store/useCanvasStore.ts`（zustand + immer + zundo 50 步历史 +
+      IndexedDB 持久化；预置双角色顾长宁×师姐 + 9 镜完整 17 列分镜表 + 分镜/视频节点初始图谱，
+      21 节点 29 边；expandStoryboard 行列布局展开、touchNode 级联 stale、autoLinkNode、
+      OpenAPI 会话消息均运行时验证通过）
 - [ ] **Phase 3**：8 种自定义节点组件 + 2 种自定义边组件（@xyflow/react v12）
 - [ ] **Phase 4**：GridSplitterModal（可拖拽分割线宫格切分）、FrameBreakdownModal（四维拉片）、
       DirectorInspectorDrawer（AST/Raw 双模精修台）
