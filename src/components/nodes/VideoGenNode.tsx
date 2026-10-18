@@ -89,6 +89,7 @@ export default function VideoGenNode(props: NodeProps) {
       model: params.model,
       duration: params.durationSec,
       ratio: params.ratio,
+      nodeId: id,
     });
     if (!task) {
       setError("无可用账号（额度耗尽或未添加）");

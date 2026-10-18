@@ -441,6 +441,8 @@ export interface DolaVideoTask {
   ratio: DolaRatio;
   accountId: string;
   status: DolaTaskStatus;
+  /** 发起任务的画布节点 id（用于成功后自动回写 videoUrl） */
+  nodeId?: string;
   conversationId?: string;
   vid?: string;
   /** get_play_info 返回的无水印原文件直链 */
@@ -457,6 +459,8 @@ export interface DolaImageTask {
   ratio: DolaRatio;
   accountId: string;
   status: DolaTaskStatus;
+  /** 发起任务的画布节点 id（用于成功后自动回写 imageUrl） */
+  nodeId?: string;
   conversationId?: string;
   imageUrl?: string;
   quotaCost?: number;

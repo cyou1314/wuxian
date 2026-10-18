@@ -491,7 +491,7 @@ export class DolaAccountPool {
 /** 任务工厂：为视频任务分配账号并初始化 */
 export function createVideoTask(
   pool: DolaAccountPool,
-  params: { prompt: string; model: DolaModel; duration: number; ratio: DolaRatio },
+  params: { prompt: string; model: DolaModel; duration: number; ratio: DolaRatio; nodeId?: string },
 ): DolaVideoTask | null {
   const account = pool.pickAccount();
   if (!account) return null; // 无可用账号（全部耗尽/失效）
@@ -504,6 +504,7 @@ export function createVideoTask(
     ratio: params.ratio,
     accountId: account.id,
     status: "queued",
+    nodeId: params.nodeId,
     createdAt: Date.now(),
   };
 }
@@ -511,7 +512,7 @@ export function createVideoTask(
 /** 任务工厂：图片任务 */
 export function createImageTask(
   pool: DolaAccountPool,
-  params: { prompt: string; ratio: DolaRatio },
+  params: { prompt: string; ratio: DolaRatio; nodeId?: string },
 ): DolaImageTask | null {
   const account = pool.pickAccount();
   if (!account) return null;
@@ -522,6 +523,7 @@ export function createImageTask(
     ratio: params.ratio,
     accountId: account.id,
     status: "queued",
+    nodeId: params.nodeId,
     createdAt: Date.now(),
   };
 }

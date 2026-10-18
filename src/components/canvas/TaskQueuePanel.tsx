@@ -7,10 +7,11 @@
  * 一键按账号额度 draining 执行；成功任务可复制无水印直链。
  */
 import { useState } from "react";
+import { useCanvasStore } from "@/store/useCanvasStore";
 import { useTaskStore } from "@/store/useTaskStore";
 import { getDolaPoolSync } from "@/lib/dola-pool";
 import { drainTaskQueue } from "@/lib/dola-executor";
-import type { DolaTaskStatus } from "@/types/libtv-schema";
+import type { DolaTask, DolaTaskStatus } from "@/types/libtv-schema";
 
 const STATUS_LABEL: Record<DolaTaskStatus, string> = {
   queued: "排队中",
@@ -52,7 +53,21 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
     setHint("");
     try {
       await drainTaskQueue(pool, queued, {
-        onTaskUpdate: (t) => updateTask(t.id, t as unknown as Record<string, unknown>),
+        onTaskUpdate: (t: DolaTask) => {
+          updateTask(t.id, t as unknown as Record<string, unknown>);
+          // 生成闭环：成功后把结果直链自动写回发起任务的画布节点
+          if (t.status === "succeeded" && t.nodeId) {
+            const patch: Record<string, unknown> = {};
+            if (t.kind === "video" && t.playUrl) patch.videoUrl = t.playUrl;
+            if (t.kind === "image" && t.imageUrl) patch.imageUrl = t.imageUrl;
+            if (Object.keys(patch).length > 0) {
+              const st = useCanvasStore.getState();
+              if (st.graph.nodes.some((n) => n.id === t.nodeId)) {
+                st.patchNodeData(t.nodeId, patch);
+              }
+            }
+          }
+        },
       });
     } finally {
       setRunning(false);

@@ -193,8 +193,8 @@ export function runDirector(opts: {
   const tasks: DolaTask[] = [];
   const genMatch = /第\s*(\d+)\s*镜/.exec(text);
   if (/生成.*?(视频|分镜视频)|做.*视频|渲染/.test(text)) {
-    const targetIdx = genMatch ? parseInt(genMatch[1], 10) - 1 : 0;
-    const row = rows[Math.max(0, Math.min(targetIdx, rows.length - 1))];
+    const targetIdx = Math.max(0, Math.min(genMatch ? parseInt(genMatch[1], 10) - 1 : 0, rows.length - 1));
+    const row = rows[targetIdx];
     if (row) {
       const task: DolaTask = {
         id: newId("task"),
@@ -205,6 +205,8 @@ export function runDirector(opts: {
         ratio: "16:9",
         accountId: "",
         status: "queued",
+        // 对应展开后的视频节点 id（expandRowsToNodes 命名规则），供执行器回写
+        nodeId: `video-${tableNodeId}-${targetIdx}`,
         createdAt: Date.now(),
       };
       tasks.push(task);
