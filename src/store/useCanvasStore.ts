@@ -10,17 +10,22 @@ import { useStore } from "zustand";
 import { temporal } from "zundo";
 import { immer } from "zustand/middleware/immer";
 import type {
+  BreakdownDimension,
+  BreakdownNote,
   CanvasEdge,
   CanvasGraph,
   CanvasNode,
   CanvasNodeData,
   CharacterAsset,
+  FrameBreakdown,
   OpenAPISession,
   SessionMessage,
   StoryboardRow,
 } from "@/types/libtv-schema";
+import { emptyBreakdown } from "@/types/libtv-schema";
 import { buildSeedGraph, SEED_CHARACTERS } from "./seed";
 import { applyAutoLink } from "@/lib/autolink-engine";
+import { expandRowsToNodes } from "@/lib/storyboard-expand";
 import { markStale } from "@/lib/dag-scheduler";
 
 // ---------------------------------------------------------------------------
@@ -33,6 +38,7 @@ export interface CanvasSnapshot {
   storyboardRows: StoryboardRow[];
   sessions: OpenAPISession[];
   activeSessionId: string | null;
+  breakdowns: Record<string, FrameBreakdown>;
 }
 
 function pickSnapshot(s: CanvasStore): CanvasSnapshot {
@@ -42,6 +48,7 @@ function pickSnapshot(s: CanvasStore): CanvasSnapshot {
     storyboardRows: s.storyboardRows,
     sessions: s.sessions,
     activeSessionId: s.activeSessionId,
+    breakdowns: s.breakdowns,
   };
 }
 
@@ -79,6 +86,14 @@ export interface CanvasStore extends CanvasSnapshot {
     msg: Omit<SessionMessage, "seq" | "createdAt">,
   ) => SessionMessage | null;
   setActiveSession: (sessionId: string | null) => void;
+
+  // -- 四维拉片 --
+  addBreakdownNote: (
+    nodeId: string,
+    dim: BreakdownDimension,
+    note: { timeMs: number; text: string },
+  ) => void;
+  removeBreakdownNote: (nodeId: string, dim: BreakdownDimension, noteId: string) => void;
 }
 
 const seed = buildSeedGraph();
@@ -95,6 +110,7 @@ export const useCanvasStore = create<CanvasStore>()(
       storyboardRows: seed.rows,
       sessions: [],
       activeSessionId: null,
+      breakdowns: {},
 
       setGraph: (graph) =>
         set((s) => {
@@ -176,98 +192,15 @@ export const useCanvasStore = create<CanvasStore>()(
         const st = get();
         const table = st.graph.nodes.find((n) => n.id === tableNodeId);
         if (!table || table.data.kind !== "storyboardTable") return [];
-        const rows = table.data.rows;
-        const created: string[] = [];
-        const baseX = table.position.x + 700;
-        const baseY = table.position.y;
-
-        // 先收集本次要写入的变更，单次 set 完成（一次历史记录）
-        const newNodes: CanvasNode[] = [];
-        const newEdges: CanvasEdge[] = [];
-        rows.forEach((row, i) => {
-          const shotId = `shot-${tableNodeId}-${i}`;
-          const videoId = `video-${tableNodeId}-${i}`;
-          const x = baseX + i * 360;
-          const shotData: CanvasNodeData = {
-            kind: "shotImage",
-            shotNo: row.shotNo || String(i + 1),
-            previewSize: { w: 2752, h: 1536 },
-            imagePromptAST: {
-              composition: { shotSize: row.shotSize, angle: "平视" },
-              character: [row.char1Name, row.char2Name].filter(Boolean).join("；"),
-              spatialRelation: row.description,
-              microExpression: "",
-              environment: row.description,
-              lighting: row.lighting,
-              style: { artStyle: "电影质感", focalLength: "35mm镜头", aperture: "f/2.8" },
-            },
-            rawPrompt: false,
-            referenceSlots: {},
-            rowRef: { tableNodeId, rowIndex: i },
-          };
-          newNodes.push({
-            id: shotId,
-            type: "shotImage",
-            position: { x, y: baseY },
-            data: shotData,
-            stale: false,
-          });
-          newNodes.push({
-            id: videoId,
-            type: "videoGen",
-            position: { x, y: baseY + 400 },
-            data: {
-              kind: "videoGen",
-              shotNo: row.shotNo || String(i + 1),
-              motionAST: {
-                cameraMove: "",
-                subjectAction: row.description,
-                envDynamics: "",
-                audio: row.sfx,
-                duration: `${row.duration.toFixed(1)}s`,
-              },
-              rawPrompt: false,
-              engine: "dola",
-              reshootRanges: [],
-            },
-            stale: false,
-          });
-          newEdges.push({
-            id: `e-${tableNodeId}-${shotId}`,
-            type: "dataflow",
-            source: tableNodeId,
-            target: shotId,
-          });
-          newEdges.push({
-            id: `e-${shotId}-${videoId}`,
-            type: "dataflow",
-            source: shotId,
-            target: videoId,
-          });
-          created.push(shotId, videoId);
-
-          // AutoLink：按角色名在行文本中建引用边
-          const haystack = `${row.char1Name} ${row.char2Name} ${row.description} ${row.dialogue}`;
-          const link = applyAutoLink(
-            shotId,
-            haystack,
-            st.characters,
-            {},
-            newEdges,
-          );
-          newEdges.push(...link.newEdges);
-          const merged = link.slotBindings.reduce(
-            (acc, b) => ({ ...acc, ...b.slots }),
-            {},
-          );
-          if (Object.keys(merged).length > 0 && shotData.kind === "shotImage") {
-            shotData.referenceSlots = {
-              ...shotData.referenceSlots,
-              ...merged,
-            };
-          }
+        // 纯函数展开（与服务端 tv-director-agent 共用同一实现）
+        const { nodes: newNodes, edges: newEdges } = expandRowsToNodes({
+          tableNodeId,
+          tablePosition: table.position,
+          rows: table.data.rows,
+          characters: st.characters,
         });
-
+        const created = newNodes.map((n) => n.id);
+        // 单次 set 完成（一次历史记录）
         set((s) => {
           s.graph.nodes.push(...newNodes);
           for (const e of newEdges) {
@@ -332,6 +265,24 @@ export const useCanvasStore = create<CanvasStore>()(
       setActiveSession: (sessionId) =>
         set((s) => {
           s.activeSessionId = sessionId;
+        }),
+
+      addBreakdownNote: (nodeId, dim, note) =>
+        set((s) => {
+          const bd = s.breakdowns[nodeId] ?? emptyBreakdown();
+          const full: BreakdownNote = {
+            id: `bn-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`,
+            timeMs: note.timeMs,
+            text: note.text,
+          };
+          bd[dim] = [...bd[dim], full].sort((a, b) => a.timeMs - b.timeMs);
+          s.breakdowns[nodeId] = bd;
+        }),
+
+      removeBreakdownNote: (nodeId, dim, noteId) =>
+        set((s) => {
+          const bd = s.breakdowns[nodeId];
+          if (bd) bd[dim] = bd[dim].filter((n) => n.id !== noteId);
         }),
     })),
     {
