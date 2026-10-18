@@ -1,7 +1,10 @@
-# wuxian（无限画布）
+# wuxian（无限画布工作台）
 
-支持 Dola 的 AI 创作画布：把 REA 逆向确认的 Dola 服务端链路装进节点式画布，
-账号 / Cookie 双登录，多账号以「额度控制」为核心做调度。
+LibTV 形态 × Dola 生成引擎 × 多账号额度控制。
+
+把 REA 逆向确认的 Dola 服务端链路装进 LibTV 式无限画布：
+节点式工作流（17 列分镜表 + 7+5 段式提示词编译），账号 / Cookie 双登录，
+多账号以「额度控制」为核心做调度（每账号剩余额度跟踪、按额度分配任务）。
 
 ## 定位
 
@@ -31,4 +34,6 @@
 
 ## 状态
 
-2026-10-18：项目立项，文档先行。P1 开发待形态确认（Web / Electron）。
+2026-10-18：项目立项，统一方向为 LibTV 形态 × Dola 引擎。Phase 1 已完成并推送：
+项目骨架 + 类型契约 + prompt-compiler + autolink-engine + dag-scheduler + dola-engine，
+`tsc --noEmit` 零错误。下一步 Phase 2（画布 Store）。

@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/* 无限画布工作台全局样式：暗色编辑器主题 */
+:root {
+  --canvas-bg: #0b0d12;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--canvas-bg);
+  color: #e8eaf0;
+}
