@@ -10,10 +10,10 @@ import { useCanvasStore } from "@/store/useCanvasStore";
 import type { SmartClipNodeData } from "@/types/libtv-schema";
 
 const inputCls =
-  "w-full rounded bg-[#0b0e14] border border-[#2a2f3d] px-2 py-1 text-xs text-slate-200";
-const labelCls = "mb-1 block text-[11px] text-slate-400";
+  "w-full rounded bg-[var(--wx-bg-input)] border border-[var(--wx-border)] px-2 py-1 text-xs text-[var(--wx-text-1)]";
+const labelCls = "mb-1 block text-[11px] text-[var(--wx-text-2)]";
 const ghostBtnCls =
-  "rounded border border-[#2a2f3d] px-2.5 py-1 text-xs text-slate-300 hover:bg-white/5";
+  "rounded border border-[var(--wx-border)] px-2.5 py-1 text-xs text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/5";
 
 export default function SmartClipNode(props: NodeProps) {
   const { id, selected } = props;
@@ -66,13 +66,13 @@ export default function SmartClipNode(props: NodeProps) {
       title="智能剪辑"
       stale={stale}
       selected={selected}
-      accent="#f472b6"
+      accent="var(--wx-accent)"
       width={340}
     >
       <div>
         <label className={labelCls}>来源视频节点（多选）</label>
         {videoNodes.length === 0 && (
-          <div className="text-[11px] text-slate-600">画布上暂无视频节点</div>
+          <div className="text-[11px] text-[var(--wx-text-3)]">画布上暂无视频节点</div>
         )}
         <div className="max-h-32 space-y-1 overflow-y-auto">
           {videoNodes.map((n) => {
@@ -81,7 +81,7 @@ export default function SmartClipNode(props: NodeProps) {
             return (
               <label
                 key={n.id}
-                className="flex cursor-pointer items-center gap-2 rounded border border-[#2a2f3d] px-2 py-1 text-xs text-slate-300 hover:bg-white/5"
+                className="flex cursor-pointer items-center gap-2 rounded border border-[var(--wx-border)] px-2 py-1 text-xs text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/5"
               >
                 <input
                   type="checkbox"
@@ -89,7 +89,7 @@ export default function SmartClipNode(props: NodeProps) {
                   onChange={(e) => toggleSource(n.id, e.target.checked)}
                 />
                 <span>视频节点 #{d.shotNo ?? "?"}</span>
-                <span className="ml-auto text-[10px] text-slate-500">
+                <span className="ml-auto text-[11px] text-[var(--wx-text-2)]">
                   {d.videoUrl ? "有成片" : "待生成"}
                 </span>
               </label>
@@ -99,7 +99,7 @@ export default function SmartClipNode(props: NodeProps) {
       </div>
 
       <div className="mt-2 flex gap-4">
-        <label className="flex items-center gap-2 text-[11px] text-slate-400">
+        <label className="flex items-center gap-2 text-[11px] text-[var(--wx-text-2)]">
           <input
             type="checkbox"
             checked={data.trimSilence}
@@ -110,7 +110,7 @@ export default function SmartClipNode(props: NodeProps) {
           />
           去口水词粗剪
         </label>
-        <label className="flex items-center gap-2 text-[11px] text-slate-400">
+        <label className="flex items-center gap-2 text-[11px] text-[var(--wx-text-2)]">
           <input
             type="checkbox"
             checked={data.subtitles}
@@ -137,7 +137,7 @@ export default function SmartClipNode(props: NodeProps) {
           </button>
         </div>
         {cuePoints.length === 0 && (
-          <div className="text-[11px] text-slate-600">暂无卡点</div>
+          <div className="text-[11px] text-[var(--wx-text-3)]">暂无卡点</div>
         )}
         {cuePoints.map((sec, i) => (
           <div key={i} className="mb-1 flex items-center gap-1">
@@ -157,7 +157,7 @@ export default function SmartClipNode(props: NodeProps) {
               onBlur={() => touchNode(id)}
             />
             <button
-              className="rounded px-1.5 text-slate-500 hover:bg-red-500/20 hover:text-red-300"
+              className="rounded px-1.5 text-[var(--wx-text-2)] hover:bg-[var(--wx-danger)]/20 hover:text-[var(--wx-danger)]"
               title="删除卡点"
               onClick={() => {
                 patchNodeData(id, { bgmCuePoints: cuePoints.filter((_, j) => j !== i) });

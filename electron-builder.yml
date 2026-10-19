@@ -1,5 +1,5 @@
-appId: com.wuxian.workbench
-productName: 无限画布
+appId: com.cyou.xan
+productName: Xan
 asar: true
 afterPack: scripts/verify-desktop-package.cjs
 directories:
@@ -36,6 +36,7 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
 mac:
+  icon: desktop/icon.icns
   category: public.app-category.graphics-design
   target:
     - target: dmg
@@ -45,4 +46,4 @@ mac:
   hardenedRuntime: true
   entitlements: desktop/entitlements.mac.plist
   entitlementsInherit: desktop/entitlements.mac.plist
-artifactName: wuxian-${version}-${os}-${arch}.${ext}
+artifactName: Xan-${version}-${os}-${arch}.${ext}

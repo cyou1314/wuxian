@@ -138,11 +138,11 @@ export default function GridSplitterModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-      <div className="max-h-full w-full max-w-4xl overflow-auto rounded-xl border border-[#2a2f3d] bg-[#12151d] p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--wx-bg-canvas)]/70 p-6">
+      <div className="max-h-full w-full max-w-4xl overflow-auto rounded-xl border border-[var(--wx-border)] bg-[var(--wx-bg-panel)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">宫格切分器</h2>
-          <button onClick={close} className="rounded px-2 text-slate-400 hover:bg-white/10">
+          <button onClick={close} className="rounded px-2 text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10">
             ×
           </button>
         </div>
@@ -153,20 +153,20 @@ export default function GridSplitterModal() {
               key={m}
               onClick={() => setMode(m)}
               className={`rounded px-3 py-1 text-sm ${
-                mode === m ? "bg-cyan-500/20 text-cyan-300" : "bg-white/5 text-slate-400"
+                mode === m ? "bg-[var(--wx-accent)]/20 text-[var(--wx-accent)]" : "bg-[var(--wx-text-1)]/5 text-[var(--wx-text-2)]"
               }`}
             >
               {m === "2x2" ? "四宫格" : "九宫格"}
             </button>
           ))}
-          <span className="ml-2 self-center text-xs text-slate-500">
+          <span className="ml-2 self-center text-xs text-[var(--wx-text-2)]">
             原图 {imgSize.w}×{imgSize.h}px · 拖拽青色分割线调整
           </span>
         </div>
 
         <div
           ref={boxRef}
-          className="relative select-none overflow-hidden rounded-lg border border-[#2a2f3d]"
+          className="relative select-none overflow-hidden rounded-lg border border-[var(--wx-border)]"
           onPointerMove={onMove}
           onPointerUp={() => (dragRef.current = null)}
           onPointerLeave={() => (dragRef.current = null)}
@@ -176,7 +176,7 @@ export default function GridSplitterModal() {
           {verticals.map((f, i) => (
             <div
               key={`v${i}`}
-              className="absolute top-0 bottom-0 w-1.5 -translate-x-1/2 cursor-ew-resize bg-cyan-400/80 hover:bg-cyan-300"
+              className="absolute top-0 bottom-0 w-1.5 -translate-x-1/2 cursor-ew-resize bg-[var(--wx-accent)]/80 hover:bg-[var(--wx-accent)]"
               style={{ left: `${f * 100}%` }}
               onPointerDown={(e) => {
                 e.preventDefault();
@@ -188,7 +188,7 @@ export default function GridSplitterModal() {
           {horizontals.map((f, i) => (
             <div
               key={`h${i}`}
-              className="absolute left-0 right-0 h-1.5 -translate-y-1/2 cursor-ns-resize bg-cyan-400/80 hover:bg-cyan-300"
+              className="absolute left-0 right-0 h-1.5 -translate-y-1/2 cursor-ns-resize bg-[var(--wx-accent)]/80 hover:bg-[var(--wx-accent)]"
               style={{ top: `${f * 100}%` }}
               onPointerDown={(e) => {
                 e.preventDefault();
@@ -201,25 +201,25 @@ export default function GridSplitterModal() {
 
         <div className="mt-3 flex flex-wrap gap-2">
           {cells.map((c, i) => (
-            <span key={i} className="rounded bg-white/5 px-2 py-1 text-[11px] text-slate-300">
+            <span key={i} className="rounded bg-[var(--wx-text-1)]/5 px-2 py-1 text-[11px] text-[var(--wx-text-2)]">
               格{i + 1}：{c.w}×{c.h}
             </span>
           ))}
         </div>
 
-        {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+        {error && <p className="mt-3 text-sm text-[var(--wx-danger)]">{error}</p>}
 
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={close}
-            className="rounded bg-white/5 px-4 py-2 text-sm text-slate-300 hover:bg-white/10"
+            className="rounded bg-[var(--wx-text-1)]/5 px-4 py-2 text-sm text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10"
           >
             取消
           </button>
           <button
             onClick={confirm}
             disabled={busy || cells.length === 0}
-            className="rounded bg-cyan-500/80 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500 disabled:opacity-50"
+            className="wx-primary rounded bg-[var(--wx-accent)]/80 px-4 py-2 text-sm font-medium text-[var(--wx-text-1)] hover:bg-[var(--wx-accent)] disabled:opacity-50"
           >
             {busy ? "裁切中…" : `确认切分并生成 ${cells.length} 个节点`}
           </button>

@@ -25,12 +25,12 @@ const STATUS_LABEL: Record<DolaTaskStatus, string> = {
 };
 
 const STATUS_COLOR: Record<DolaTaskStatus, string> = {
-  queued: "text-slate-400",
-  submitting: "text-cyan-300",
-  generating: "text-cyan-300",
-  polling: "text-violet-300",
-  succeeded: "text-emerald-400",
-  failed: "text-red-400",
+  queued: "text-[var(--wx-text-2)]",
+  submitting: "text-[var(--wx-accent)]",
+  generating: "text-[var(--wx-accent)]",
+  polling: "text-[var(--wx-accent)]",
+  succeeded: "text-[var(--wx-success)]",
+  failed: "text-[var(--wx-danger)]",
 };
 
 export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
@@ -83,29 +83,29 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="absolute top-14 right-4 z-30 flex max-h-[70vh] w-[360px] flex-col rounded-xl border border-[#2a2f3d] bg-[#12151d] p-4 shadow-2xl">
+    <div className="absolute top-20 right-4 z-30 flex max-h-[70vh] w-[360px] flex-col rounded-xl border border-[var(--wx-border)] bg-[var(--wx-bg-panel)] p-4 shadow-2xl">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">
           生成任务队列
-          <span className="ml-2 text-[11px] text-slate-500">
+          <span className="ml-2 text-[11px] text-[var(--wx-text-2)]">
             {tasks.filter((t) => t.status === "queued").length} 排队中
           </span>
         </h3>
-        <button onClick={onClose} className="rounded px-2 text-slate-400 hover:bg-white/10">
+        <button onClick={onClose} className="rounded px-2 text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10">
           ×
         </button>
       </div>
 
       <div className="mb-3 flex-1 space-y-2 overflow-auto">
         {tasks.length === 0 && (
-          <p className="py-6 text-center text-[12px] text-slate-500">
+          <p className="py-6 text-center text-[12px] text-[var(--wx-text-2)]">
             暂无任务。在视频节点点"生成视频"入队。
           </p>
         )}
         {tasks.map((t) => (
-          <div key={t.id} className="rounded bg-white/[0.04] px-2 py-2">
+          <div key={t.id} className="rounded bg-[var(--wx-text-1)]/[0.04] px-2 py-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-[var(--wx-text-2)]">
                 {t.kind === "video" ? "视频" : "图片"} · {t.kind === "video" ? t.duration : ""}s
               </span>
               <span className="flex items-center gap-2">
@@ -114,28 +114,28 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
                 </span>
                 <button
                   onClick={() => removeTask(t.id)}
-                  className="rounded px-1 text-slate-500 hover:bg-red-500/20 hover:text-red-300"
+                  className="rounded px-1 text-[var(--wx-text-2)] hover:bg-[var(--wx-danger)]/20 hover:text-[var(--wx-danger)]"
                   title="移除任务"
                 >
                   ×
                 </button>
               </span>
             </div>
-            <p className="mt-1 line-clamp-2 text-[12px] text-slate-200">{t.prompt}</p>
-            {t.error && <p className="mt-1 text-[11px] text-red-400">{t.error}</p>}
+            <p className="mt-1 line-clamp-2 text-[12px] text-[var(--wx-text-1)]">{t.prompt}</p>
+            {t.error && <p className="mt-1 text-[11px] text-[var(--wx-danger)]">{t.error}</p>}
             {"playUrl" in t && t.playUrl && (
               <div className="mt-1 flex items-center gap-2">
                 <a
                   href={t.playUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[11px] text-cyan-300 underline"
+                  className="text-[11px] text-[var(--wx-accent)] underline"
                 >
                   无水印直链
                 </a>
                 <button
                   onClick={() => navigator.clipboard.writeText(t.playUrl as string)}
-                  className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-400 hover:bg-white/10"
+                  className="rounded bg-[var(--wx-text-1)]/5 px-1.5 py-0.5 text-[11px] text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10"
                 >
                   复制
                 </button>
@@ -145,15 +145,15 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
         ))}
       </div>
 
-      {hint && <p className="mb-2 text-[12px] text-amber-300">{hint}</p>}
+      {hint && <p className="mb-2 text-[12px] text-[var(--wx-warning)]">{hint}</p>}
       <button
         onClick={run}
         disabled={running}
-        className="rounded bg-cyan-500/80 py-2 text-sm font-medium text-white hover:bg-cyan-500 disabled:opacity-50"
+        className="wx-primary rounded bg-[var(--wx-accent)]/80 py-2 text-sm font-medium text-[var(--wx-text-1)] hover:bg-[var(--wx-accent)] disabled:opacity-50"
       >
         {running ? "执行中…" : "按额度执行队列"}
       </button>
-      <p className="mt-2 text-[10px] leading-relaxed text-slate-600">
+      <p className="mt-2 text-[11px] leading-relaxed text-[var(--wx-text-3)]">
         {window.wuxianDesktop ? "请先在账号窗口完成登录。执行后可在此查看进度和生成结果。" : "执行需在已登录真实页面上下文或家宽出口环境；当前环境不满足时任务会如实报错。"}
       </p>
     </div>

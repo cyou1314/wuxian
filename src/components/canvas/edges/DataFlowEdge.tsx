@@ -33,19 +33,20 @@ export default function DataFlowEdge({
     targetPosition,
   });
   const stale = (data as { stale?: boolean } | undefined)?.stale === true;
-  const color = stale ? "#f59e0b" : selected ? "#38bdf8" : "#22d3ee";
+  const gradientId = `wx-edge-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  const color = stale ? "var(--wx-warning)" : `url(#${gradientId})`;
 
   return (
     <>
+      <defs><linearGradient id={gradientId} x1={sourceX} y1={sourceY} x2={targetX} y2={targetY} gradientUnits="userSpaceOnUse"><stop offset="0%" stopColor="var(--wx-edge-from)" /><stop offset="100%" stopColor="var(--wx-edge-to)" /></linearGradient></defs>
       <BaseEdge
         id={id}
         path={path}
-        className="edge-flow"
         style={{ stroke: color, strokeWidth: selected ? 2.5 : 2, opacity: 0.9 }}
       />
       <EdgeLabelRenderer>
         <button
-          className="nodrag nopan pointer-events-auto absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#1c2029] text-[11px] text-slate-400 opacity-0 hover:bg-red-500/30 hover:text-red-300 hover:opacity-100 group-hover:opacity-100"
+          className="nodrag nopan pointer-events-auto absolute flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--wx-bg-panel)] text-[11px] text-[var(--wx-text-2)] opacity-0 hover:bg-[var(--wx-danger)]/30 hover:text-[var(--wx-danger)] hover:opacity-100 group-hover:opacity-100"
           style={{ left: labelX, top: labelY }}
           title="删除连线"
           onClick={(e) => {

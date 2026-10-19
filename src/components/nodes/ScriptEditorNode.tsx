@@ -16,9 +16,9 @@ import type {
 } from "@/types/libtv-schema";
 
 const inputCls =
-  "w-full rounded border border-[#2a2f3d] bg-[#0d1017] px-2 py-1 text-[11px] text-slate-200 outline-none focus:border-[#34d399]";
+  "w-full rounded border border-[var(--wx-border)] bg-[var(--wx-bg-input)] px-2 py-1 text-[11px] text-[var(--wx-text-1)] outline-none focus:border-[var(--wx-accent)]";
 const btnCls =
-  "rounded border border-[#2a2f3d] bg-[#1d2230] px-2 py-1 text-[11px] text-slate-200 hover:bg-[#252b3d] disabled:cursor-not-allowed disabled:opacity-40";
+  "rounded border border-[var(--wx-border)] bg-[var(--wx-bg-hover)] px-2 py-1 text-[11px] text-[var(--wx-text-1)] hover:bg-[var(--wx-bg-hover)] disabled:cursor-not-allowed disabled:opacity-40";
 
 /** 按非空段落切分：优先按空行分段，单段时退化为按换行分段 */
 function splitParagraphs(text: string): string[] {
@@ -149,10 +149,10 @@ export default function ScriptEditorNode(props: NodeProps) {
   };
 
   return (
-    <NodeShell id={id} title="剧本编辑器" stale={stale} selected={selected} accent="#34d399" width={380}>
+    <NodeShell id={id} title="剧本编辑器" stale={stale} selected={selected} accent="var(--wx-accent)" width={380}>
       <div className="space-y-3">
         <div>
-          <div className="mb-1 text-[11px] font-medium text-slate-400">原创剧本</div>
+          <div className="mb-1 text-[11px] font-medium text-[var(--wx-text-2)]">原创剧本</div>
           <textarea
             className={`${inputCls} h-20 resize-y`}
             value={data.original}
@@ -162,7 +162,7 @@ export default function ScriptEditorNode(props: NodeProps) {
           />
         </div>
         <div>
-          <div className="mb-1 text-[11px] font-medium text-slate-400">改编剧本</div>
+          <div className="mb-1 text-[11px] font-medium text-[var(--wx-text-2)]">改编剧本</div>
           <textarea
             className={`${inputCls} h-20 resize-y`}
             value={data.adapted}
@@ -172,29 +172,29 @@ export default function ScriptEditorNode(props: NodeProps) {
           />
         </div>
 
-        <div className="border-t border-[#2a2f3d] pt-2">
-          <div className="mb-1 text-[11px] font-medium text-slate-400">
+        <div className="border-t border-[var(--wx-border)] pt-2">
+          <div className="mb-1 text-[11px] font-medium text-[var(--wx-text-2)]">
             冲突改写对比（{data.conflicts.filter((c) => c.resolved).length}/{data.conflicts.length} 已采用）
           </div>
           <div className="space-y-1.5">
             {data.conflicts.map((c) => (
-              <div key={c.id} className="rounded border border-[#2a2f3d] bg-[#0d1017] p-2">
-                <div className="text-[11px] text-slate-500">
-                  改前：<span className={c.resolved ? "text-slate-600 line-through" : "text-slate-400 line-through"}>{c.before}</span>
+              <div key={c.id} className="rounded border border-[var(--wx-border)] bg-[var(--wx-bg-input)] p-2">
+                <div className="text-[11px] text-[var(--wx-text-2)]">
+                  改前：<span className={c.resolved ? "text-[var(--wx-text-3)] line-through" : "text-[var(--wx-text-2)] line-through"}>{c.before}</span>
                 </div>
-                <div className="mt-0.5 text-[11px] text-slate-200">改后：{c.after}</div>
+                <div className="mt-0.5 text-[11px] text-[var(--wx-text-1)]">改后：{c.after}</div>
                 <div className="mt-1 flex gap-1">
                   <button className={btnCls} onClick={toggleConflict(c.id)}>
                     {c.resolved ? "已采用 ✓" : "采用改写"}
                   </button>
-                  <button className={`${btnCls} text-red-300`} onClick={removeConflict(c.id)}>
+                  <button className={`${btnCls} text-[var(--wx-danger)]`} onClick={removeConflict(c.id)}>
                     删除
                   </button>
                 </div>
               </div>
             ))}
             {data.conflicts.length === 0 && (
-              <div className="text-[11px] text-slate-600">暂无改写对比</div>
+              <div className="text-[11px] text-[var(--wx-text-3)]">暂无改写对比</div>
             )}
           </div>
           <div className="mt-1.5 flex gap-1">
@@ -206,14 +206,14 @@ export default function ScriptEditorNode(props: NodeProps) {
           </div>
         </div>
 
-        <div className="border-t border-[#2a2f3d] pt-2">
-          <div className="mb-1 text-[11px] font-medium text-slate-400">伏笔关联（{data.foreshadows.length}）</div>
+        <div className="border-t border-[var(--wx-border)] pt-2">
+          <div className="mb-1 text-[11px] font-medium text-[var(--wx-text-2)]">伏笔关联（{data.foreshadows.length}）</div>
           <div className="space-y-1.5">
             {data.foreshadows.map((f) => (
-              <div key={f.id} className="flex items-center gap-1 rounded border border-[#2a2f3d] bg-[#0d1017] p-1.5">
-                <span className="flex-1 text-[11px] text-slate-200">{f.text}</span>
+              <div key={f.id} className="flex items-center gap-1 rounded border border-[var(--wx-border)] bg-[var(--wx-bg-input)] p-1.5">
+                <span className="flex-1 text-[11px] text-[var(--wx-text-1)]">{f.text}</span>
                 <input
-                  className="w-14 rounded border border-[#2a2f3d] bg-[#12151d] px-1 py-0.5 text-[11px] text-slate-300 outline-none"
+                  className="w-14 rounded border border-[var(--wx-border)] bg-[var(--wx-bg-panel)] px-1 py-0.5 text-[11px] text-[var(--wx-text-2)] outline-none"
                   value={f.linkedShotNo ?? ""}
                   onChange={patchForeshadowShot(f.id)}
                   placeholder="镜号"
@@ -225,7 +225,7 @@ export default function ScriptEditorNode(props: NodeProps) {
               </div>
             ))}
             {data.foreshadows.length === 0 && (
-              <div className="text-[11px] text-slate-600">暂无伏笔</div>
+              <div className="text-[11px] text-[var(--wx-text-3)]">暂无伏笔</div>
             )}
           </div>
           <div className="mt-1.5 flex gap-1">
@@ -238,7 +238,7 @@ export default function ScriptEditorNode(props: NodeProps) {
         </div>
 
         <button
-          className="w-full rounded bg-[#34d399]/15 border border-[#34d399]/40 px-2 py-1.5 text-[12px] font-medium text-emerald-300 hover:bg-[#34d399]/25 disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded bg-[var(--wx-accent)]/15 border border-[var(--wx-accent)]/40 px-2 py-1.5 text-[12px] font-medium text-[var(--wx-accent)] hover:bg-[var(--wx-accent)]/25 disabled:cursor-not-allowed disabled:opacity-40"
           onClick={pushToStoryboard}
           disabled={paragraphCount === 0}
         >

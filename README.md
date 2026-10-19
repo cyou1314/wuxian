@@ -1,4 +1,4 @@
-# wuxian（无限画布工作台）
+# Xan（wuxian 无限画布工作台）
 
 LibTV 形态 × Dola 生成引擎 × 多账号额度控制。
 
@@ -45,3 +45,13 @@ LibTV 形态 × Dola 生成引擎 × 多账号额度控制。
 画布 Store（种子：顾长宁×师姐 9 镜分镜表）、8 节点 + 2 边组件、工作台主页面、TV Director、
 4 个 OpenAPI 路由。`tsc --noEmit` 零错误，`next build` 一次通过，API 闭环实测通过。
 待用户决策：P6 端到端真实生成的执行环境（用户 Mac 家宽 IP / 另行安排）。
+
+
+## Xan 工作台更新
+
+统一深灰与青色界面、媒体预览节点、选中节点参数卡、搜索添加菜单和画布工具栏。
+新工作区默认是空白画布，不再自动加载角色与示例分镜；已有 `.wuxian` 项目仍正常恢复。
+桌面应用名称为 Xan，macOS 图标与 Deck 保持一致。Mac 本地构建可运行 `bash scripts/test-mac.command`，安装到 `~/deck/Xan.app`。
+
+类型检查、生产构建、项目存储与真实 Electron 编辑/重启恢复在 macOS arm64 本机验证通过。
+真实 Dola 登录、生成、下载和完整跨平台验收仍需单独验证。

@@ -28,10 +28,10 @@ const DEFAULT_DEPTH: Record<LayerKind, number> = {
 };
 
 const inputCls =
-  "w-full rounded bg-[#0b0e14] border border-[#2a2f3d] px-2 py-1 text-xs text-slate-200";
-const labelCls = "mb-1 block text-[11px] text-slate-400";
+  "w-full rounded bg-[var(--wx-bg-input)] border border-[var(--wx-border)] px-2 py-1 text-xs text-[var(--wx-text-1)]";
+const labelCls = "mb-1 block text-[11px] text-[var(--wx-text-2)]";
 const ghostBtnCls =
-  "rounded border border-[#2a2f3d] px-2.5 py-1 text-xs text-slate-300 hover:bg-white/5";
+  "rounded border border-[var(--wx-border)] px-2.5 py-1 text-xs text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/5";
 
 export default function LayerSplitNode(props: NodeProps) {
   const { id, selected } = props;
@@ -98,17 +98,17 @@ export default function LayerSplitNode(props: NodeProps) {
       title="图层分离"
       stale={stale}
       selected={selected}
-      accent="#2dd4bf"
+      accent="var(--wx-accent)"
       width={340}
     >
       {data.sourceImageUrl ? (
         <img
           src={data.sourceImageUrl}
           alt="源图"
-          className="aspect-video w-full rounded bg-black object-cover"
+          className="aspect-video w-full rounded bg-[var(--wx-bg-canvas)] object-cover"
         />
       ) : (
-        <div className="flex aspect-video w-full items-center justify-center rounded bg-[#0b0e14] text-xs text-slate-500">
+        <div className="flex aspect-video w-full items-center justify-center rounded bg-[var(--wx-bg-input)] text-xs text-[var(--wx-text-2)]">
           暂无源图
         </div>
       )}
@@ -116,14 +116,14 @@ export default function LayerSplitNode(props: NodeProps) {
       <button className={`${ghostBtnCls} mt-2 w-full`} onClick={handleInit}>
         从上游分镜图初始化
       </button>
-      {error && <div className="mt-1 text-[11px] text-red-300">{error}</div>}
+      {error && <div className="mt-1 text-[11px] text-[var(--wx-danger)]">{error}</div>}
 
       <div className="mt-2 space-y-2">
         {layers.length === 0 && (
-          <div className="text-[11px] text-slate-600">暂无图层，点击上方按钮初始化</div>
+          <div className="text-[11px] text-[var(--wx-text-3)]">暂无图层，点击上方按钮初始化</div>
         )}
         {layers.map((l) => (
-          <div key={l.id} className="rounded border border-[#2a2f3d] p-2">
+          <div key={l.id} className="rounded border border-[var(--wx-border)] p-2">
             <div className="mb-1 flex items-center gap-1">
               <input
                 className={inputCls}
@@ -144,7 +144,7 @@ export default function LayerSplitNode(props: NodeProps) {
                 ))}
               </select>
               <button
-                className="shrink-0 rounded px-1.5 text-slate-500 hover:bg-red-500/20 hover:text-red-300"
+                className="shrink-0 rounded px-1.5 text-[var(--wx-text-2)] hover:bg-[var(--wx-danger)]/20 hover:text-[var(--wx-danger)]"
                 title="删除图层"
                 onClick={() => {
                   setLayers(layers.filter((x) => x.id !== l.id));
@@ -163,18 +163,18 @@ export default function LayerSplitNode(props: NodeProps) {
               ] as const
             ).map((s) => (
               <div key={s.key} className="flex items-center gap-2">
-                <span className="w-12 shrink-0 text-[10px] text-slate-500">{s.label}</span>
+                <span className="w-12 shrink-0 text-[11px] text-[var(--wx-text-2)]">{s.label}</span>
                 <input
                   type="range"
                   min={s.min}
                   max={s.max}
                   step={s.step}
-                  className="flex-1 accent-teal-400"
+                  className="flex-1 accent-[var(--wx-accent)]"
                   value={l.transform[s.key]}
                   onChange={(e) => updateTransform(l.id, s.key, Number(e.target.value))}
                   onBlur={() => touchNode(id)}
                 />
-                <span className="w-12 shrink-0 text-right text-[10px] text-slate-400">
+                <span className="w-12 shrink-0 text-right text-[11px] text-[var(--wx-text-2)]">
                   {l.transform[s.key]}
                 </span>
               </div>

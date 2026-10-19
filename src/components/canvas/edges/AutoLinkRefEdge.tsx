@@ -40,7 +40,7 @@ export default function AutoLinkRefEdge({
         id={id}
         path={path}
         style={{
-          stroke: selected ? "#a78bfa" : "#64748b",
+          stroke: selected ? "var(--wx-accent)" : "var(--wx-text-3)",
           strokeWidth: 1.5,
           strokeDasharray: "6 5",
           opacity: 0.85,
@@ -51,11 +51,11 @@ export default function AutoLinkRefEdge({
           className="nodrag nopan pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2"
           style={{ left: labelX, top: labelY }}
         >
-          <span className="rounded-full bg-violet-500/15 px-2 py-0.5 text-[10px] text-violet-300">
+          <span className="rounded-full bg-[var(--wx-accent)]/15 px-2 py-0.5 text-[11px] text-[var(--wx-accent)]">
             @{character?.name ?? "角色"}
           </span>
           <button
-            className="ml-1 rounded-full bg-[#1c2029] px-1 text-[10px] text-slate-500 opacity-0 hover:bg-red-500/30 hover:text-red-300 hover:opacity-100"
+            className="ml-1 rounded-full bg-[var(--wx-bg-panel)] px-1 text-[11px] text-[var(--wx-text-2)] opacity-0 hover:bg-[var(--wx-danger)]/30 hover:text-[var(--wx-danger)] hover:opacity-100"
             title="删除引用"
             onClick={(e) => {
               e.stopPropagation();

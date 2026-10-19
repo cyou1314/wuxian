@@ -1,0 +1,9 @@
+Xan · Mac 本地构建
+
+需要 Node.js 22.12 或更新版本和 npm。
+在仓库根目录运行：bash scripts/test-mac.command
+
+脚本按当前架构构建并安装到 ~/deck/Xan.app。
+新工作区默认空白；已有项目会正常恢复。
+这是本机构建测试版，未完成 Developer ID 签名和 Apple 公证。
+真实 Dola 生成需用户在独立账号窗口本人登录后验证。

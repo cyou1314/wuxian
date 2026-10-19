@@ -6,6 +6,9 @@
  */
 import { useState } from "react";
 import type { NodeProps } from "@xyflow/react";
+import NodeParameterPanel from "../canvas/NodeParameterPanel";
+import NodeQuickToolbar from "../canvas/NodeQuickToolbar";
+import StudioIcon from "../ui/StudioIcon";
 import { NodeShell } from "./NodeShell";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import { useUIStore } from "@/store/useUIStore";
@@ -42,12 +45,12 @@ const MOTION_FIELDS: Array<{ key: keyof VideoMotionAST; label: string; textarea?
 ];
 
 const inputCls =
-  "w-full rounded bg-[#0b0e14] border border-[#2a2f3d] px-2 py-1 text-xs text-slate-200";
-const labelCls = "mb-1 block text-[11px] text-slate-400";
+  "w-full rounded bg-[var(--wx-bg-input)] border border-[var(--wx-border)] px-2 py-1 text-xs text-[var(--wx-text-1)]";
+const labelCls = "mb-1 block text-[11px] text-[var(--wx-text-2)]";
 const btnCls =
-  "rounded bg-[#fb7185]/15 border border-[#fb7185]/40 px-2.5 py-1 text-xs text-rose-200 hover:bg-[#fb7185]/25";
+  "rounded bg-[var(--wx-accent)]/15 border border-[var(--wx-accent)]/40 px-2.5 py-1 text-xs text-[var(--wx-danger)] hover:bg-[var(--wx-accent)]/25";
 const ghostBtnCls =
-  "rounded border border-[#2a2f3d] px-2.5 py-1 text-xs text-slate-300 hover:bg-white/5";
+  "rounded border border-[var(--wx-border)] px-2.5 py-1 text-xs text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/5";
 
 export default function VideoGenNode(props: NodeProps) {
   const { id, selected } = props;
@@ -55,6 +58,8 @@ export default function VideoGenNode(props: NodeProps) {
   const stale = useCanvasStore((s) => s.graph.nodes.find((n) => n.id === id)?.stale ?? false);
   const patchNodeData = useCanvasStore((s) => s.patchNodeData);
   const touchNode = useCanvasStore((s) => s.touchNode);
+  const inspectorId = useUIStore((s) => s.inspectorNodeId);
+  const openInspector = useUIStore((s) => s.openInspector);
   const openBreakdown = useUIStore((s) => s.openBreakdown);
   const enqueueTask = useTaskStore((s) => s.enqueueTask);
   const task = useTaskStore((s) => s.tasks.find((t) => t.id === data.dolaTaskId));
@@ -105,29 +110,25 @@ export default function VideoGenNode(props: NodeProps) {
       title={`视频节点 #${data.shotNo}`}
       stale={stale}
       selected={selected}
-      accent="#fb7185"
+      accent="var(--wx-accent)"
       width={340}
     >
-      <div className="mb-2 flex items-center justify-between">
-        <span className="rounded bg-emerald-500/15 border border-emerald-500/40 px-1.5 py-0.5 text-[10px] text-emerald-300">
-          Dola
-        </span>
-        {task && (
-          <span className="text-[10px] text-slate-400">
-            任务：<span className="text-slate-200">{task.status}</span>
-          </span>
-        )}
+      <div className="wx-media">
+        <span className="wx-media-badge">AI生成{task ? ` · ${task.status}` : ""}</span>
+        {data.videoUrl ? <video src={data.videoUrl} controls /> : <div className="wx-empty-media"><StudioIcon name="videoGen" /><span>让分镜动起来</span><span className="text-[11px]">选中节点，设置运动与生成参数</span></div>}
       </div>
-
-      {data.videoUrl ? (
-        <video src={data.videoUrl} controls className="aspect-video w-full rounded bg-black" />
-      ) : (
-        <div className="flex aspect-video w-full items-center justify-center rounded bg-[#0b0e14] text-xs text-slate-500">
-          待生成
-        </div>
-      )}
-
-      <label className="mt-2 flex items-center gap-2 text-[11px] text-slate-400">
+      <NodeQuickToolbar visible={!!selected && inspectorId !== id}>
+        <button onClick={() => openInspector(id)}>精修运动</button>
+        <button onClick={() => openBreakdown(id)}>拉片</button>
+        <button onClick={() => setRanges([...ranges, { startMs: 0, endMs: 1000 }])}>重拍选区</button>
+      </NodeQuickToolbar>
+      <NodeParameterPanel visible={!!selected && inspectorId !== id}>
+      <div>
+        <div className="wx-parameter-title"><StudioIcon name="videoGen" /><span>运动参数</span><span className="ml-auto">Dola · {params.ratio}</span></div>
+        <label className="mb-3 block text-[var(--wx-text-2)]">主体动作
+          <textarea className={`${inputCls} mt-2 min-h-20 resize-y`} value={data.motionAST.subjectAction} onChange={(e) => setMotion("subjectAction", e.target.value)} onBlur={() => touchNode(id)} placeholder="描述动作、节奏和画面变化…" />
+        </label>
+      <label className="mt-2 flex items-center gap-2 text-[11px] text-[var(--wx-text-2)]">
         <input
           type="checkbox"
           checked={data.rawPrompt}
@@ -149,11 +150,11 @@ export default function VideoGenNode(props: NodeProps) {
         />
       )}
 
-      <details className="mt-2 rounded border border-[#2a2f3d]">
-        <summary className="cursor-pointer px-2 py-1.5 text-xs text-slate-300">
+      <details className="mt-2 rounded border border-[var(--wx-border)]">
+        <summary className="cursor-pointer px-2 py-1.5 text-xs text-[var(--wx-text-2)]">
           5 段式运动编辑器
         </summary>
-        <div className="space-y-2 border-t border-[#2a2f3d] p-2">
+        <div className="space-y-2 border-t border-[var(--wx-border)] p-2">
           {MOTION_FIELDS.map((f) => (
             <div key={f.key}>
               <label className={labelCls}>{f.label}</label>
@@ -240,7 +241,7 @@ export default function VideoGenNode(props: NodeProps) {
             + 新增
           </button>
         </div>
-        {ranges.length === 0 && <div className="text-[11px] text-slate-600">无重拍选区</div>}
+        {ranges.length === 0 && <div className="text-[11px] text-[var(--wx-text-3)]">无重拍选区</div>}
         {ranges.map((r, i) => (
           <div key={i} className="mb-1 flex items-center gap-1">
             <input
@@ -258,7 +259,7 @@ export default function VideoGenNode(props: NodeProps) {
               onBlur={() => touchNode(id)}
               title="起始毫秒"
             />
-            <span className="text-slate-500">→</span>
+            <span className="text-[var(--wx-text-2)]">→</span>
             <input
               type="number"
               min={0}
@@ -275,7 +276,7 @@ export default function VideoGenNode(props: NodeProps) {
               title="结束毫秒"
             />
             <button
-              className="rounded px-1.5 text-slate-500 hover:bg-red-500/20 hover:text-red-300"
+              className="rounded px-1.5 text-[var(--wx-text-2)] hover:bg-[var(--wx-danger)]/20 hover:text-[var(--wx-danger)]"
               title="删除选区"
               onClick={() => setRanges(ranges.filter((_, j) => j !== i))}
             >
@@ -296,16 +297,18 @@ export default function VideoGenNode(props: NodeProps) {
         />
       </div>
 
-      {error && <div className="mt-2 text-[11px] text-red-300">{error}</div>}
+      {error && <div className="mt-2 text-[11px] text-[var(--wx-danger)]">{error}</div>}
 
       <div className="mt-3 flex gap-2">
-        <button className={btnCls} onClick={handleGenerate}>
+        <button className={`${btnCls} wx-primary flex-1 py-2`} onClick={handleGenerate}>
           生成视频
         </button>
         <button className={ghostBtnCls} onClick={() => openBreakdown(id)}>
           拉片
         </button>
       </div>
+      </div>
+      </NodeParameterPanel>
     </NodeShell>
   );
 }

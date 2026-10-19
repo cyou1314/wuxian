@@ -72,17 +72,17 @@ export default function AccountsPanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="absolute top-14 right-4 z-30 w-[340px] rounded-xl border border-[#2a2f3d] bg-[#12151d] p-4 shadow-2xl">
+    <div className="absolute top-20 right-4 z-30 w-[340px] rounded-xl border border-[var(--wx-border)] bg-[var(--wx-bg-panel)] p-4 shadow-2xl">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Dola 多账号 · 额度控制</h3>
-        <button onClick={onClose} className="rounded px-2 text-slate-400 hover:bg-white/10">
+        <button onClick={onClose} className="rounded px-2 text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10">
           ×
         </button>
       </div>
 
       {!unlocked ? (
         <div className="space-y-2">
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-[var(--wx-text-2)]">
             口令用于派生 AES-GCM 密钥加密 Cookie，仅存内存，不落盘。
           </p>
           <input
@@ -91,11 +91,11 @@ export default function AccountsPanel({ onClose }: { onClose: () => void }) {
             onChange={(e) => setPassphrase(e.target.value)}
             placeholder="解锁口令"
             onKeyDown={(e) => e.key === "Enter" && unlock()}
-            className="w-full rounded bg-white/5 px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-cyan-400"
+            className="w-full rounded bg-[var(--wx-text-1)]/5 px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--wx-accent)]"
           />
           <button
             onClick={unlock}
-            className="w-full rounded bg-cyan-500/80 py-2 text-sm font-medium text-white hover:bg-cyan-500"
+            className="wx-primary w-full rounded bg-[var(--wx-accent)]/80 py-2 text-sm font-medium text-[var(--wx-text-1)] hover:bg-[var(--wx-accent)]"
           >
             解锁账号池
           </button>
@@ -104,24 +104,24 @@ export default function AccountsPanel({ onClose }: { onClose: () => void }) {
         <div className="space-y-3">
           <div className="space-y-2">
             {accounts.length === 0 && (
-              <p className="text-[11px] text-slate-500">暂无账号，请添加 Cookie 登录。</p>
+              <p className="text-[11px] text-[var(--wx-text-2)]">暂无账号，请添加 Cookie 登录。</p>
             )}
             {accounts.map((a) => (
               <div
                 key={a.id}
-                className="flex items-center justify-between rounded bg-white/[0.04] px-2 py-1.5"
+                className="flex items-center justify-between rounded bg-[var(--wx-text-1)]/[0.04] px-2 py-1.5"
               >
                 <div>
-                  <div className="text-[12px] text-slate-200">{a.label}</div>
-                  <div className="text-[10px] text-slate-500">
+                  <div className="text-[12px] text-[var(--wx-text-1)]">{a.label}</div>
+                  <div className="text-[11px] text-[var(--wx-text-2)]">
                     剩余额度：{a.quotaRemaining ?? "未知"} · 今日已用：{a.quotaDailyUsed} ·
                     <span
                       className={
                         a.status === "active"
-                          ? "text-emerald-400"
+                          ? "text-[var(--wx-success)]"
                           : a.status === "exhausted"
-                            ? "text-amber-400"
-                            : "text-red-400"
+                            ? "text-[var(--wx-warning)]"
+                            : "text-[var(--wx-danger)]"
                       }
                     >
                       {a.status === "active" ? "可用" : a.status === "exhausted" ? "额度耗尽" : "失效"}
@@ -130,7 +130,7 @@ export default function AccountsPanel({ onClose }: { onClose: () => void }) {
                 </div>
                 <button
                   onClick={() => remove(a.id)}
-                  className="rounded px-1 text-slate-500 hover:bg-red-500/20 hover:text-red-300"
+                  className="rounded px-1 text-[var(--wx-text-2)] hover:bg-[var(--wx-danger)]/20 hover:text-[var(--wx-danger)]"
                   title="移除账号"
                 >
                   ×
@@ -138,36 +138,36 @@ export default function AccountsPanel({ onClose }: { onClose: () => void }) {
               </div>
             ))}
           </div>
-          <div className="space-y-2 border-t border-[#2a2f3d] pt-3">
+          <div className="space-y-2 border-t border-[var(--wx-border)] pt-3">
             <input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder="账号备注（可选）"
-              className="w-full rounded bg-white/5 px-2 py-1.5 text-[12px] outline-none focus:ring-1 focus:ring-cyan-400"
+              className="w-full rounded bg-[var(--wx-text-1)]/5 px-2 py-1.5 text-[12px] outline-none focus:ring-1 focus:ring-[var(--wx-accent)]"
             />
             <textarea
               value={cookie}
               onChange={(e) => setCookie(e.target.value)}
               placeholder="粘贴 Dola session cookie（添加后即加密）"
               rows={3}
-              className="w-full rounded bg-white/5 px-2 py-1.5 font-mono text-[11px] outline-none focus:ring-1 focus:ring-cyan-400"
+              className="w-full rounded bg-[var(--wx-text-1)]/5 px-2 py-1.5 font-mono text-[11px] outline-none focus:ring-1 focus:ring-[var(--wx-accent)]"
             />
             <button
               onClick={add}
-              className="w-full rounded bg-cyan-500/80 py-1.5 text-sm font-medium text-white hover:bg-cyan-500"
+              className="wx-primary w-full rounded bg-[var(--wx-accent)]/80 py-1.5 text-sm font-medium text-[var(--wx-text-1)] hover:bg-[var(--wx-accent)]"
             >
               添加账号（Cookie 登录）
             </button>
             <button
               onClick={lock}
-              className="w-full rounded bg-white/5 py-1.5 text-[12px] text-slate-400 hover:bg-white/10"
+              className="w-full rounded bg-[var(--wx-text-1)]/5 py-1.5 text-[12px] text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10"
             >
               锁定（清除内存密钥）
             </button>
           </div>
         </div>
       )}
-      {error && <p className="mt-2 text-[12px] text-red-400">{error}</p>}
+      {error && <p className="mt-2 text-[12px] text-[var(--wx-danger)]">{error}</p>}
     </div>
   );
 }

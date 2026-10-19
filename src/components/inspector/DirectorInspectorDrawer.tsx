@@ -24,10 +24,10 @@ function Field({
   textarea?: boolean;
 }) {
   const cls =
-    "w-full rounded bg-white/5 px-2 py-1.5 text-[12px] text-slate-200 outline-none focus:ring-1 focus:ring-cyan-400";
+    "w-full rounded bg-[var(--wx-text-1)]/5 px-2 py-1.5 text-[12px] text-[var(--wx-text-1)] outline-none focus:ring-1 focus:ring-[var(--wx-accent)]";
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] text-slate-400">{label}</span>
+      <span className="mb-1 block text-[11px] text-[var(--wx-text-2)]">{label}</span>
       {textarea ? (
         <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={2} className={cls} />
       ) : (
@@ -111,22 +111,22 @@ export default function DirectorInspectorDrawer() {
   const setVid = (patch: Partial<VideoMotionAST>) => setVidAst((a) => ({ ...a, ...patch }));
 
   return (
-    <div className="fixed top-0 right-0 z-40 flex h-full w-[380px] flex-col border-l border-[#2a2f3d] bg-[#12151d] shadow-2xl">
-      <div className="flex items-center justify-between border-b border-[#2a2f3d] px-4 py-3">
+    <div role="dialog" aria-label="导演精修台" className="fixed top-0 right-0 z-40 flex h-full w-[380px] max-w-[92vw] flex-col border-l border-[var(--wx-border)] bg-[var(--wx-bg-panel)] shadow-2xl">
+      <div className="flex items-center justify-between border-b border-[var(--wx-border)] px-4 py-3">
         <h2 className="text-sm font-semibold">导演精修台 · {node.id}</h2>
-        <button onClick={close} className="rounded px-2 text-slate-400 hover:bg-white/10">
+        <button onClick={close} className="rounded px-2 text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10">
           ×
         </button>
       </div>
 
       <div className="flex-1 space-y-3 overflow-auto p-4">
         {(isShot || isVideo) && (
-          <label className="flex items-center gap-2 text-[12px] text-slate-300">
+          <label className="flex items-center gap-2 text-[12px] text-[var(--wx-text-2)]">
             <input
               type="checkbox"
               checked={rawPrompt}
               onChange={(e) => setRawPrompt(e.target.checked)}
-              className="accent-cyan-400"
+              className="accent-[var(--wx-accent)]"
             />
             Raw Prompt 直发模式（跳过 7/5 段重写器）
           </label>
@@ -163,15 +163,15 @@ export default function DirectorInspectorDrawer() {
         )}
 
         {!isShot && !isVideo && (
-          <pre className="overflow-auto rounded bg-white/5 p-2 text-[11px] text-slate-300">
+          <pre className="overflow-auto rounded bg-[var(--wx-text-1)]/5 p-2 text-[11px] text-[var(--wx-text-2)]">
             {JSON.stringify(node.data, null, 2)}
           </pre>
         )}
 
         {(isShot || isVideo) && (
           <div>
-            <span className="mb-1 block text-[11px] text-slate-400">编译预览（将写入审计 resolvedPrompt）</span>
-            <pre className="max-h-48 overflow-auto rounded bg-black/40 p-2 text-[11px] whitespace-pre-wrap text-cyan-200/90">
+            <span className="mb-1 block text-[11px] text-[var(--wx-text-2)]">编译预览（将写入审计 resolvedPrompt）</span>
+            <pre className="max-h-48 overflow-auto rounded bg-[var(--wx-bg-canvas)]/40 p-2 text-[11px] whitespace-pre-wrap text-[var(--wx-accent)]/90">
               {preview || "（空）"}
             </pre>
           </div>
@@ -179,10 +179,10 @@ export default function DirectorInspectorDrawer() {
       </div>
 
       {(isShot || isVideo) && (
-        <div className="border-t border-[#2a2f3d] p-4">
+        <div className="border-t border-[var(--wx-border)] p-4">
           <button
             onClick={apply}
-            className="w-full rounded bg-cyan-500/80 py-2 text-sm font-medium text-white hover:bg-cyan-500"
+            className="wx-primary w-full rounded bg-[var(--wx-accent)]/80 py-2 text-sm font-medium text-[var(--wx-text-1)] hover:bg-[var(--wx-accent)]"
           >
             应用并标记下游待更新
           </button>

@@ -52,11 +52,11 @@ export default function FrameBreakdownModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6">
-      <div className="flex max-h-full w-full max-w-2xl flex-col rounded-xl border border-[#2a2f3d] bg-[#12151d] p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--wx-bg-canvas)]/70 p-6">
+      <div className="flex max-h-full w-full max-w-2xl flex-col rounded-xl border border-[var(--wx-border)] bg-[var(--wx-bg-panel)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">逐帧拉片 · {title}</h2>
-          <button onClick={close} className="rounded px-2 text-slate-400 hover:bg-white/10">
+          <button onClick={close} className="rounded px-2 text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10">
             ×
           </button>
         </div>
@@ -67,31 +67,31 @@ export default function FrameBreakdownModal() {
               key={d}
               onClick={() => setDim(d)}
               className={`rounded px-3 py-1.5 text-sm ${
-                dim === d ? "bg-violet-500/20 text-violet-300" : "bg-white/5 text-slate-400"
+                dim === d ? "bg-[var(--wx-accent)]/20 text-[var(--wx-accent)]" : "bg-[var(--wx-text-1)]/5 text-[var(--wx-text-2)]"
               }`}
             >
               {BREAKDOWN_DIMENSION_LABELS[d]}
-              <span className="ml-1 text-[10px] opacity-70">({bd[d].length})</span>
+              <span className="ml-1 text-[11px] opacity-70">({bd[d].length})</span>
             </button>
           ))}
         </div>
 
         <div className="mb-4 flex-1 space-y-2 overflow-auto">
           {bd[dim].length === 0 && (
-            <p className="py-6 text-center text-sm text-slate-500">暂无笔记，在下方添加</p>
+            <p className="py-6 text-center text-sm text-[var(--wx-text-2)]">暂无笔记，在下方添加</p>
           )}
           {bd[dim].map((n) => (
             <div
               key={n.id}
-              className="flex items-start gap-3 rounded bg-white/[0.03] px-3 py-2"
+              className="flex items-start gap-3 rounded bg-[var(--wx-text-1)]/[0.03] px-3 py-2"
             >
-              <span className="mt-0.5 shrink-0 rounded bg-violet-500/15 px-1.5 py-0.5 font-mono text-[11px] text-violet-300">
+              <span className="mt-0.5 shrink-0 rounded bg-[var(--wx-accent)]/15 px-1.5 py-0.5 font-mono text-[11px] text-[var(--wx-accent)]">
                 {fmtMs(n.timeMs)}
               </span>
-              <span className="flex-1 text-sm text-slate-200">{n.text}</span>
+              <span className="flex-1 text-sm text-[var(--wx-text-1)]">{n.text}</span>
               <button
                 onClick={() => removeNote(nodeId, dim, n.id)}
-                className="rounded px-1 text-slate-500 hover:bg-red-500/20 hover:text-red-300"
+                className="rounded px-1 text-[var(--wx-text-2)] hover:bg-[var(--wx-danger)]/20 hover:text-[var(--wx-danger)]"
                 title="删除"
               >
                 ×
@@ -100,7 +100,7 @@ export default function FrameBreakdownModal() {
           ))}
         </div>
 
-        <div className="flex gap-2 border-t border-[#2a2f3d] pt-4">
+        <div className="flex gap-2 border-t border-[var(--wx-border)] pt-4">
           <input
             value={timeSec}
             onChange={(e) => setTimeSec(e.target.value)}
@@ -108,18 +108,18 @@ export default function FrameBreakdownModal() {
             type="number"
             min="0"
             step="0.1"
-            className="w-28 rounded bg-white/5 px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-violet-400"
+            className="w-28 rounded bg-[var(--wx-text-1)]/5 px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--wx-accent)]"
           />
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={`${BREAKDOWN_DIMENSION_LABELS[dim]}笔记…`}
             onKeyDown={(e) => e.key === "Enter" && submit()}
-            className="flex-1 rounded bg-white/5 px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-violet-400"
+            className="flex-1 rounded bg-[var(--wx-text-1)]/5 px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-[var(--wx-accent)]"
           />
           <button
             onClick={submit}
-            className="rounded bg-violet-500/80 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500"
+            className="wx-primary rounded bg-[var(--wx-accent)]/80 px-4 py-2 text-sm font-medium text-[var(--wx-text-1)] hover:bg-[var(--wx-accent)]"
           >
             添加
           </button>

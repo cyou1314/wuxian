@@ -26,10 +26,10 @@ const MOVE_LABELS: Record<MoveType, string> = {
 };
 
 const inputCls =
-  "w-full rounded bg-[#0b0e14] border border-[#2a2f3d] px-2 py-1 text-xs text-slate-200";
-const labelCls = "mb-1 block text-[11px] text-slate-400";
+  "w-full rounded bg-[var(--wx-bg-input)] border border-[var(--wx-border)] px-2 py-1 text-xs text-[var(--wx-text-1)]";
+const labelCls = "mb-1 block text-[11px] text-[var(--wx-text-2)]";
 const ghostBtnCls =
-  "rounded border border-[#2a2f3d] px-2.5 py-1 text-xs text-slate-300 hover:bg-white/5";
+  "rounded border border-[var(--wx-border)] px-2.5 py-1 text-xs text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/5";
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
@@ -221,11 +221,11 @@ export default function ThreeDBoxNode(props: NodeProps) {
       title="3D-BOX 空间预演"
       stale={stale}
       selected={selected}
-      accent="#818cf8"
+      accent="var(--wx-accent)"
       width={380}
     >
-      <div ref={containerRef} className="h-[220px] w-full overflow-hidden rounded bg-[#0b0e14]" />
-      <pre className="mt-1 text-[10px] text-slate-600">
+      <div ref={containerRef} className="h-[220px] w-full overflow-hidden rounded bg-[var(--wx-bg-input)]" />
+      <pre className="mt-1 text-[11px] text-[var(--wx-text-3)]">
         {JSON.stringify({ objects: objectCount, cameraMoves: moves.length })}
       </pre>
 
@@ -261,10 +261,10 @@ export default function ThreeDBoxNode(props: NodeProps) {
 
       <div className="mt-2 space-y-2">
         {moves.length === 0 && (
-          <div className="text-[11px] text-slate-600">暂无运镜，点击上方添加</div>
+          <div className="text-[11px] text-[var(--wx-text-3)]">暂无运镜，点击上方添加</div>
         )}
         {moves.map((m) => (
-          <div key={m.id} className="rounded border border-[#2a2f3d] p-2">
+          <div key={m.id} className="rounded border border-[var(--wx-border)] p-2">
             <div className="mb-1 flex items-center gap-1">
               <select
                 className={`${inputCls} w-24 shrink-0`}
@@ -297,7 +297,7 @@ export default function ThreeDBoxNode(props: NodeProps) {
                   onChange={(e) => updateVec(m.id, "from", "y", Number(e.target.value) || 0)}
                   onBlur={() => touchNode(id)}
                 />
-                <span className="text-slate-500">→</span>
+                <span className="text-[var(--wx-text-2)]">→</span>
                 <input
                   type="number"
                   step={0.1}
@@ -318,7 +318,7 @@ export default function ThreeDBoxNode(props: NodeProps) {
                 />
               </div>
               <button
-                className="shrink-0 rounded px-1.5 text-slate-500 hover:bg-red-500/20 hover:text-red-300"
+                className="shrink-0 rounded px-1.5 text-[var(--wx-text-2)] hover:bg-[var(--wx-danger)]/20 hover:text-[var(--wx-danger)]"
                 title="删除运镜"
                 onClick={() => {
                   setMoves(moves.filter((x) => x.id !== m.id));

@@ -1,4 +1,4 @@
-# Windows / macOS 桌面版
+# Xan · Windows / macOS 桌面版
 
 桌面版采用 Electron + Next.js standalone。安装后内置本地服务，不要求用户安装 Node.js，也不依赖开发服务器。画布和现有 Web 版本共享源码。
 
@@ -27,10 +27,12 @@ Windows 使用 NSIS 安装包，macOS 使用 DMG / ZIP，输出在 `release/`。
 
 ## 项目文件与恢复
 
-- 底部工具栏或文件菜单可打开、保存和另存为 `.wuxian` 文件。
+- 新工作区默认空白，不自动加载示例角色或分镜；打开已有项目仍恢复保存的内容。
+
+- 顶部项目工具栏或文件菜单可打开、保存和另存为 `.wuxian` 文件。
 - Windows 使用 Ctrl+O / Ctrl+S / Ctrl+Shift+S；macOS 使用 Cmd 对应组合。
 - 文件包含画布、角色、分镜、拉片笔记、会话和任务；不包含账号凭证。
-- 本地自动恢复文件位于 Electron 的 `userData` 目录：Windows 通常为 `%APPDATA%/无限画布`，macOS 通常为 `~/Library/Application Support/无限画布`（开发模式目录名为 `wuxian`）。
+- 本地自动恢复文件位于 Electron 的 `userData` 目录：Windows 通常为 `%APPDATA%/Xan`，macOS 通常为 `~/Library/Application Support/Xan`（开发模式目录名为 `wuxian`）。
 - 每次修改写入 `workspace.wuxian`，使用串行临时文件替换，退出前再次保存最新快照。自动恢复只保留最近工作区；需要保留多个项目时使用“保存/另存为”。
 - 重启后，未完成的提交、轮询和生成任务会标记为中断，不自动重提，以免重复消耗额度。请先到 Dola 确认结果。
 - 本轮采用版本化 JSON 项目文件，而非 SQLite。项目上限 50 MB，超过时会显示保存错误。角色上传图以 data URL 随项目保存；外部媒体 URL 仍依赖原地址，尚未做离线媒体归档。

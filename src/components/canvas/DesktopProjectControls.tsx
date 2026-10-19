@@ -52,10 +52,10 @@ export default function DesktopProjectControls() {
     const unsubscribeCommands = bridge.onCommand((name) => void commandRef.current(name));
     return () => { unsubscribeCanvas(); unsubscribeTasks(); unsubscribeCommands(); };
   }, []);
-  return <div className="absolute bottom-4 left-1/2 z-20 flex max-w-[90vw] -translate-x-1/2 items-center gap-3 rounded-lg border border-[#2a2f3d] bg-[#12151d] px-3 py-2 text-xs text-slate-300">
+  return <div className="wx-panel wx-desktop-project">
     <button onClick={() => void commandRef.current('open')}>打开项目</button>
     <button onClick={() => void commandRef.current('save')}>保存</button>
     <button onClick={() => void commandRef.current('saveAs')}>另存为</button>
-    <span className="max-w-80 truncate text-slate-400" role="status" title={status}>{status}</span>
+    <span className="max-w-80 truncate text-[var(--wx-text-2)]" role="status" title={status}>{status}</span>
   </div>;
 }

@@ -1,76 +1,26 @@
 "use client";
-
-/**
- * NodeShell — 8 种自定义节点的统一外壳：
- * 标题栏（类型名 + stale 脏标记 + 删除按钮）+ 左右 Handle。
- */
 import { Handle, Position } from "@xyflow/react";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import type { ReactNode } from "react";
-
+import StudioIcon from "../ui/StudioIcon";
 interface NodeShellProps {
-  id: string;
-  title: string;
-  stale?: boolean;
-  selected?: boolean;
-  accent?: string;
-  showTarget?: boolean;
-  showSource?: boolean;
-  width?: number;
-  children: ReactNode;
+  id: string; title: string; stale?: boolean; selected?: boolean; accent?: string;
+  showTarget?: boolean; showSource?: boolean; width?: number; children: ReactNode;
 }
-
-export function NodeShell({
-  id,
-  title,
-  stale,
-  selected,
-  accent = "#38bdf8",
-  showTarget = true,
-  showSource = true,
-  width = 320,
-  children,
-}: NodeShellProps) {
+export function NodeShell({ id, title, stale, selected, showTarget = true, showSource = true, width = 320, children }: NodeShellProps) {
   const removeNodes = useCanvasStore((s) => s.removeNodes);
-  return (
-    <div
-      className="rounded-xl border bg-[#12151d]/95 shadow-xl backdrop-blur"
-      style={{
-        width,
-        borderColor: selected ? accent : "#2a2f3d",
-        boxShadow: selected ? `0 0 0 1px ${accent}` : undefined,
-      }}
-    >
-      {showTarget && (
-        <Handle type="target" position={Position.Left} className="!bg-slate-500 !w-3 !h-3" />
-      )}
-      <div
-        className="flex items-center justify-between rounded-t-xl px-3 py-2"
-        style={{ borderBottom: `2px solid ${accent}` }}
-      >
-        <span className="text-[13px] font-semibold text-slate-100">{title}</span>
-        <span className="flex items-center gap-2">
-          {stale && (
-            <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] text-amber-300">
-              待更新
-            </span>
-          )}
-          <button
-            className="rounded px-1 text-slate-500 hover:bg-red-500/20 hover:text-red-300"
-            title="删除节点"
-            onClick={(e) => {
-              e.stopPropagation();
-              removeNodes([id]);
-            }}
-          >
-            ×
-          </button>
-        </span>
-      </div>
-      <div className="nodrag p-3">{children}</div>
-      {showSource && (
-        <Handle type="source" position={Position.Right} className="!bg-slate-500 !w-3 !h-3" />
-      )}
+  const node = useCanvasStore((s) => s.graph.nodes.find((n) => n.id === id));
+  const media = node?.type === "shotImage" || node?.type === "videoGen";
+  const specification = node?.data.kind === "shotImage" ? `${node.data.previewSize.w} × ${node.data.previewSize.h}` : node?.data.kind === "videoGen" ? "Dola" : "";
+  return <div className={`wx-node ${selected ? "is-selected" : ""}`} data-media={media} style={{ width }}>
+    <div className="wx-node-heading">
+      <StudioIcon name={node?.type ?? "settings"} /><strong>{title}</strong>
+      <span className="ml-auto whitespace-nowrap text-[11px]">{specification}</span>
+      {stale && <span className="rounded-full bg-[var(--wx-warning)]/10 px-2 py-0.5 text-[11px] text-[var(--wx-warning)]">待更新</span>}
+      <button className="nodrag rounded px-1 text-[var(--wx-text-3)] hover:text-[var(--wx-danger)]" title="删除节点" aria-label={`删除${title}`} onClick={(e) => { e.stopPropagation(); removeNodes([id]); }}>×</button>
     </div>
-  );
+    {showTarget && <Handle type="target" position={Position.Left}>+</Handle>}
+    <div className="nodrag wx-node-content">{children}</div>
+    {showSource && <Handle type="source" position={Position.Right}>+</Handle>}
+  </div>;
 }

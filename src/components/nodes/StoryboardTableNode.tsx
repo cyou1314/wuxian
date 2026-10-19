@@ -32,9 +32,9 @@ const COL_WIDTHS: Record<StoryboardColumnKey, number> = {
 };
 
 const btnCls =
-  "rounded border border-[#2a2f3d] bg-[#1d2230] px-2 py-1 text-[11px] text-slate-200 hover:bg-[#252b3d]";
+  "rounded border border-[var(--wx-border)] bg-[var(--wx-bg-hover)] px-2 py-1 text-[11px] text-[var(--wx-text-1)] hover:bg-[var(--wx-bg-hover)]";
 const cellInputCls =
-  "w-full bg-transparent px-1 py-1 text-[11px] text-slate-200 outline-none focus:bg-[#0d1017] focus:text-white";
+  "w-full bg-transparent px-1 py-1 text-[11px] text-[var(--wx-text-1)] outline-none focus:bg-[var(--wx-bg-input)] focus:text-[var(--wx-text-1)]";
 
 function blankRow(shotNo: string): StoryboardRow {
   return {
@@ -113,17 +113,17 @@ export default function StoryboardTableNode(props: NodeProps) {
       title={`分镜总表 · ${localRows.length} 镜`}
       stale={stale}
       selected={selected}
-      accent="#38bdf8"
+      accent="var(--wx-accent)"
       width={920}
       showTarget={false}
     >
       <div className="mb-2 flex items-center gap-3">
-        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-300">
+        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-[var(--wx-text-2)]">
           <input
             type="checkbox"
             checked={data.approved}
             onChange={(e) => approveStoryboard(e.target.checked)}
-            className="accent-[#38bdf8]"
+            className="accent-[var(--wx-accent)]"
           />
           已审核确认
         </label>
@@ -133,34 +133,34 @@ export default function StoryboardTableNode(props: NodeProps) {
         <button className={btnCls} onClick={addRow}>
           + 添加一镜
         </button>
-        <span className="text-[11px] text-slate-500">
+        <span className="text-[11px] text-[var(--wx-text-2)]">
           共 {localRows.length} 镜 · 总时长 {totalDuration}s
         </span>
       </div>
 
-      <div className="max-h-[420px] overflow-auto rounded border border-[#2a2f3d]">
+      <div className="max-h-[420px] overflow-auto rounded border border-[var(--wx-border)]">
         <table className="border-collapse">
-          <thead className="sticky top-0 z-10 bg-[#1d2230]">
+          <thead className="sticky top-0 z-10 bg-[var(--wx-bg-panel)]">
             <tr>
               {STORYBOARD_COLUMNS.map((col) => (
                 <th
                   key={col}
                   style={{ minWidth: COL_WIDTHS[col] }}
-                  className="border-b border-r border-[#2a2f3d] px-1 py-1.5 text-left text-[11px] font-medium text-slate-400 last:border-r-0"
+                  className="border-b border-r border-[var(--wx-border)] px-1 py-1.5 text-left text-[11px] font-medium text-[var(--wx-text-2)] last:border-r-0"
                 >
                   {STORYBOARD_COLUMN_LABELS[col]}
                 </th>
               ))}
-              <th className="w-10 border-b border-[#2a2f3d] px-1 py-1.5 text-[11px] font-medium text-slate-400">
+              <th className="w-10 border-b border-[var(--wx-border)] px-1 py-1.5 text-[11px] font-medium text-[var(--wx-text-2)]">
                 操作
               </th>
             </tr>
           </thead>
           <tbody>
             {localRows.map((row, i) => (
-              <tr key={i} className="border-b border-[#232838] last:border-b-0 hover:bg-[#151a26]">
+              <tr key={i} className="border-b border-[var(--wx-border-soft)] last:border-b-0 hover:bg-[var(--wx-bg-hover)]">
                 {STORYBOARD_COLUMNS.map((col) => (
-                  <td key={col} className="border-r border-[#232838] last:border-r-0">
+                  <td key={col} className="border-r border-[var(--wx-border-soft)] last:border-r-0">
                     {col === "duration" ? (
                       <input
                         type="number"
@@ -183,7 +183,7 @@ export default function StoryboardTableNode(props: NodeProps) {
                 ))}
                 <td className="px-1 text-center">
                   <button
-                    className="rounded px-1.5 text-[12px] text-slate-500 hover:bg-red-500/20 hover:text-red-300"
+                    className="rounded px-1.5 text-[12px] text-[var(--wx-text-2)] hover:bg-[var(--wx-danger)]/20 hover:text-[var(--wx-danger)]"
                     onClick={removeRow(i)}
                     title="删除该镜"
                   >
@@ -194,7 +194,7 @@ export default function StoryboardTableNode(props: NodeProps) {
             ))}
             {localRows.length === 0 && (
               <tr>
-                <td colSpan={STORYBOARD_COLUMNS.length + 1} className="px-2 py-6 text-center text-[11px] text-slate-600">
+                <td colSpan={STORYBOARD_COLUMNS.length + 1} className="px-2 py-6 text-center text-[11px] text-[var(--wx-text-3)]">
                   暂无分镜，点击「添加一镜」或从剧本节点推送拆镜
                 </td>
               </tr>

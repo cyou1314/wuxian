@@ -27,7 +27,7 @@ const SLOTS: Array<{ view: "front" | "side" | "back"; slot: "image1" | "image2" 
 ];
 
 const inputCls =
-  "w-full rounded border border-[#2a2f3d] bg-[#0d1017] px-2 py-1 text-[11px] text-slate-200 outline-none focus:border-[#a78bfa]";
+  "w-full rounded border border-[var(--wx-border)] bg-[var(--wx-bg-input)] px-2 py-1 text-[11px] text-[var(--wx-text-1)] outline-none focus:border-[var(--wx-accent)]";
 
 export default function RoleStudioNode(props: NodeProps) {
   const { id, selected } = props;
@@ -69,8 +69,8 @@ export default function RoleStudioNode(props: NodeProps) {
 
   if (!character) {
     return (
-      <NodeShell id={id} title="角色造型室" stale={stale} selected={selected} accent="#a78bfa" width={300}>
-        <div className="text-[11px] text-red-300">角色不存在：{data.characterId}</div>
+      <NodeShell id={id} title="角色造型室" stale={stale} selected={selected} accent="var(--wx-accent)" width={300}>
+        <div className="text-[11px] text-[var(--wx-danger)]">角色不存在：{data.characterId}</div>
       </NodeShell>
     );
   }
@@ -81,13 +81,13 @@ export default function RoleStudioNode(props: NodeProps) {
       title={`角色造型室 · ${character.name}`}
       stale={stale}
       selected={selected}
-      accent="#a78bfa"
+      accent="var(--wx-accent)"
       width={300}
     >
       <div className="space-y-1.5">
         {FIELDS.map((f) => (
           <label key={f.key} className="flex items-center gap-2">
-            <span className="w-8 shrink-0 text-[11px] text-slate-500">{f.label}</span>
+            <span className="w-8 shrink-0 text-[11px] text-[var(--wx-text-2)]">{f.label}</span>
             <input
               className={inputCls}
               value={character[f.key]}
@@ -98,23 +98,23 @@ export default function RoleStudioNode(props: NodeProps) {
         ))}
       </div>
 
-      <div className="mt-3 space-y-2 border-t border-[#2a2f3d] pt-2">
-        <div className="text-[11px] font-medium text-slate-400">三视图参考</div>
+      <div className="mt-3 space-y-2 border-t border-[var(--wx-border)] pt-2">
+        <div className="text-[11px] font-medium text-[var(--wx-text-2)]">三视图参考</div>
         {SLOTS.map(({ view, slot }) => {
           const url = character.views[view];
           return (
             <div key={view} className="flex items-center gap-2">
-              <div className="w-24 shrink-0 text-[11px] text-slate-500">{IMAGE_SLOT_LABELS[slot]}</div>
+              <div className="w-24 shrink-0 text-[11px] text-[var(--wx-text-2)]">{IMAGE_SLOT_LABELS[slot]}</div>
               {url ? (
                 <>
-                  <img src={url} alt={view} className="h-14 w-14 rounded border border-[#2a2f3d] object-cover" />
+                  <img src={url} alt={view} className="h-14 w-14 rounded border border-[var(--wx-border)] object-cover" />
                   <div className="flex flex-col gap-1">
-                    <label className="cursor-pointer rounded border border-[#2a2f3d] bg-[#1d2230] px-2 py-0.5 text-[11px] text-slate-300 hover:bg-[#252b3d]">
+                    <label className="cursor-pointer rounded border border-[var(--wx-border)] bg-[var(--wx-bg-hover)] px-2 py-0.5 text-[11px] text-[var(--wx-text-2)] hover:bg-[var(--wx-bg-hover)]">
                       更换
                       <input type="file" accept="image/*" className="hidden" onChange={handleFile(view)} />
                     </label>
                     <button
-                      className="rounded border border-[#2a2f3d] bg-[#1d2230] px-2 py-0.5 text-[11px] text-red-300 hover:bg-red-500/20"
+                      className="rounded border border-[var(--wx-border)] bg-[var(--wx-bg-hover)] px-2 py-0.5 text-[11px] text-[var(--wx-danger)] hover:bg-[var(--wx-danger)]/20"
                       onClick={handleRemoveView(view)}
                     >
                       删除
@@ -122,7 +122,7 @@ export default function RoleStudioNode(props: NodeProps) {
                   </div>
                 </>
               ) : (
-                <label className="cursor-pointer rounded border border-dashed border-[#3a4157] px-3 py-2 text-[11px] text-slate-500 hover:border-[#a78bfa] hover:text-slate-300">
+                <label className="cursor-pointer rounded border border-dashed border-[var(--wx-border)] px-3 py-2 text-[11px] text-[var(--wx-text-2)] hover:border-[var(--wx-accent)] hover:text-[var(--wx-text-2)]">
                   点击上传图片
                   <input type="file" accept="image/*" className="hidden" onChange={handleFile(view)} />
                 </label>

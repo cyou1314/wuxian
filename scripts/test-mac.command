@@ -24,25 +24,27 @@ npm run desktop:prepare
 npm run test:desktop:smoke
 CSC_IDENTITY_AUTO_DISCOVERY=false npx electron-builder --mac --dir --"$TASK_ARCH" --publish never
 if [ "$TASK_ARCH" = "arm64" ]; then
-  TASK_APP="$TASK_ROOT/release/mac-arm64/无限画布.app"
+  TASK_APP="$TASK_ROOT/release/mac-arm64/Xan.app"
 else
-  TASK_APP="$TASK_ROOT/release/mac/无限画布.app"
+  TASK_APP="$TASK_ROOT/release/mac/Xan.app"
 fi
 if [ ! -d "$TASK_APP" ]; then
   printf '未找到构建产物：%s\n' "$TASK_APP" >&2
   exit 1
 fi
-TASK_APPLICATIONS="$HOME/Applications"
-TASK_DEST="$TASK_APPLICATIONS/无限画布测试版.app"
-TASK_STAGE="$TASK_APPLICATIONS/.wuxian-test-install-$$.app"
+TASK_APPLICATIONS="$HOME/deck"
+TASK_DEST="$TASK_APPLICATIONS/Xan.app"
+TASK_STAGE="$TASK_APPLICATIONS/.xan-install-$$.app"
 mkdir -p "$TASK_APPLICATIONS"
 if /usr/bin/pgrep -f "$TASK_DEST/Contents/MacOS/" >/dev/null 2>&1; then
-  printf '请先退出正在运行的无限画布测试版，再重新执行脚本。\n' >&2
+  printf '请先退出正在运行的Xan，再重新执行脚本。\n' >&2
   exit 1
 fi
 /usr/bin/ditto "$TASK_APP" "$TASK_STAGE"
+/usr/bin/codesign --force --deep --sign - "$TASK_STAGE"
+/usr/bin/codesign --verify --deep --strict "$TASK_STAGE"
 if [ -e "$TASK_DEST" ]; then
-  TASK_BACKUP="$TASK_APPLICATIONS/无限画布测试版-备份-$(date +%Y%m%d-%H%M%S)-$$.app"
+  TASK_BACKUP="$TASK_APPLICATIONS/Xan-备份-$(date +%Y%m%d-%H%M%S)-$$.app"
   mv "$TASK_DEST" "$TASK_BACKUP"
   printf '旧测试版已保留：%s\n' "$TASK_BACKUP"
 fi

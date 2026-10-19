@@ -6,6 +6,7 @@ const path = require('node:path');
   const dest = path.join(root, '.next', 'standalone');
   await fs.access(path.join(dest, 'server.js'));
   await fs.cp(path.join(root, '.next', 'static'), path.join(dest, '.next', 'static'), { recursive: true });
+  await fs.mkdir(path.join(root, 'public'), { recursive: true });
   await fs.cp(path.join(root, 'public'), path.join(dest, 'public'), { recursive: true, filter: (source) => !source.split(path.sep).includes('uploads') });
   await fs.rm(path.join(dest, 'public', 'uploads'), { recursive: true, force: true });
   // Never ship local API data, account state or build caches in the installer.

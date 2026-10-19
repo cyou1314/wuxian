@@ -84,7 +84,7 @@ function installMenu() {
 async function createWindow() {
   rendererReady = false;
   window = new BrowserWindow({ width: 1440, height: 960, minWidth: 1050, minHeight: 700,
-    title: '无限画布', backgroundColor: '#0b0d12', show: false,
+    title: 'Xan', backgroundColor: '#0b0d12', show: false,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false },
   });
   window.webContents.setWindowOpenHandler(({ url }) => {
@@ -114,24 +114,24 @@ function registerProjects() {
   });
   handle('project:autosave', (project) => writeProject(recoveryFile(), project));
   handle('project:open', async () => {
-    const result = await dialog.showOpenDialog(window, { properties: ['openFile'], filters: [{ name: '无限画布项目', extensions: ['wuxian'] }] });
+    const result = await dialog.showOpenDialog(window, { properties: ['openFile'], filters: [{ name: 'Xan项目', extensions: ['wuxian'] }] });
     if (result.canceled) return null;
     const project = await readProject(result.filePaths[0]);
     await writeProject(recoveryFile(), project);
     currentFile = result.filePaths[0];
-    window.setTitle(`无限画布 — ${path.basename(currentFile)}`);
+    window.setTitle(`Xan — ${path.basename(currentFile)}`);
     return project;
   });
   handle('project:save', async (project, saveAs) => {
     let target = currentFile;
     if (!target || saveAs) {
-      const result = await dialog.showSaveDialog(window, { defaultPath: target || '未命名.wuxian', filters: [{ name: '无限画布项目', extensions: ['wuxian'] }] });
+      const result = await dialog.showSaveDialog(window, { defaultPath: target || '未命名.wuxian', filters: [{ name: 'Xan项目', extensions: ['wuxian'] }] });
       if (result.canceled) return null;
       target = result.filePath;
     }
     await writeProject(target, project);
     currentFile = target;
-    window.setTitle(`无限画布 — ${path.basename(target)}`);
+    window.setTitle(`Xan — ${path.basename(target)}`);
     return path.basename(target);
   });
   handle('project:close', async (project) => {
@@ -152,7 +152,7 @@ else {
     installMenu();
     await createWindow();
     app.on('activate', () => { if (!window) void createWindow(); });
-  }).catch((error) => { dialog.showErrorBox('无限画布启动失败', error.message); app.quit(); });
+  }).catch((error) => { dialog.showErrorBox('Xan启动失败', error.message); app.quit(); });
   app.on('window-all-closed', () => app.quit());
   app.on('will-quit', () => { closing = true; server?.kill(); });
 }

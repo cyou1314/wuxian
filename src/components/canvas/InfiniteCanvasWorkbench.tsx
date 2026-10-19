@@ -13,12 +13,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
-  Controls,
   MiniMap,
   useNodesState,
   useEdgesState,
   ReactFlowProvider,
   useReactFlow,
+  useViewport,
   type Node,
   type Edge,
   type Connection,
@@ -59,6 +59,7 @@ import FrameBreakdownModal from "../modals/FrameBreakdownModal";
 import DirectorInspectorDrawer from "../inspector/DirectorInspectorDrawer";
 import AccountsPanel from "./AccountsPanel";
 import TaskQueuePanel from "./TaskQueuePanel";
+import StudioIcon from "../ui/StudioIcon";
 
 const nodeTypes = {
   roleStudio: RoleStudioNode,
@@ -189,6 +190,14 @@ function WorkbenchInner() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [showMinimap, setShowMinimap] = useState(true);
+  const [showEdges, setShowEdges] = useState(true);
+  const [snap, setSnap] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [showAssets, setShowAssets] = useState(false);
+  const [query, setQuery] = useState("");
+  const [workspaceName, setWorkspaceName] = useState("未命名项目");
+  const { zoom } = useViewport();
   const [showAccounts, setShowAccounts] = useState(false);
   const [showTasks, setShowTasks] = useState(false);
   const [menu, setMenu] = useState<{
@@ -198,14 +207,20 @@ function WorkbenchInner() {
     flowY: number;
   } | null>(null);
 
-  const { screenToFlowPosition, getNodes } = useReactFlow();
+  const { screenToFlowPosition, getNodes, fitView, zoomIn, zoomOut, getViewport, setViewport } = useReactFlow();
+  useEffect(() => {
+    setWorkspaceName(localStorage.getItem("xan-workspace-label") || "未命名项目");
+    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") { setMenu(null); setShowHelp(false); setShowAssets(false); } };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, []);
   const graphRef = useRef(graph);
   graphRef.current = graph;
   const lastPaneClick = useRef(0);
 
   // store → 画布单向同步（拖拽等本地交互不写 store，不触发回环）
   useEffect(() => {
-    setNodes(graph.nodes.map(toXYNode));
+    setNodes((current) => graph.nodes.map((n) => ({ ...toXYNode(n), selected: current.find((c) => c.id === n.id)?.selected ?? false })));
     setEdges(graph.edges.map((e) => toXYEdge(e, graph)));
   }, [graph, setNodes, setEdges]);
 
@@ -249,6 +264,7 @@ function WorkbenchInner() {
       const now = Date.now();
       if (now - lastPaneClick.current < 350) {
         const p = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+        setQuery("");
         setMenu({ x: e.clientX, y: e.clientY, flowX: p.x, flowY: p.y });
         lastPaneClick.current = 0;
       } else {
@@ -400,11 +416,24 @@ function WorkbenchInner() {
     });
   };
 
+  const openAddMenu = () => {
+    if (menu) { setMenu(null); return; }
+    const p = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    setQuery("");
+    setMenu({ x: window.innerWidth / 2 - 150, y: window.innerHeight - 610, flowX: p.x, flowY: p.y });
+  };
+  const groups = [
+    { label: "资产", types: ["roleStudio"] },
+    { label: "剧本与分镜", types: ["scriptEditor", "storyboardTable", "shotImage"] },
+    { label: "视频生成", types: ["videoGen"] },
+    { label: "后期与预演", types: ["layerSplit", "threeDBox", "smartClip"] },
+  ];
+
   return (
-    <div className="relative h-screen w-full" onKeyDown={onKeyDown} tabIndex={0}>
+    <div className="relative h-screen w-full outline-none" onKeyDown={onKeyDown} tabIndex={0}>
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={edges.map((e) => ({ ...e, hidden: !showEdges }))}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -412,112 +441,80 @@ function WorkbenchInner() {
         onEdgesDelete={onEdgesDelete}
         onNodeDragStop={onNodeDragStop}
         onPaneClick={onPaneClick}
+        onNodeClick={(_e, node) => {
+          if (node.type !== "shotImage" && node.type !== "videoGen") return;
+          const v = getViewport();
+          const center = Math.max(210, Math.min(window.innerWidth - 210, (node.position.x + 170) * v.zoom + v.x));
+          void setViewport({ x: center - (node.position.x + 170) * v.zoom, y: 145 - node.position.y * v.zoom, zoom: v.zoom });
+        }}
+        defaultViewport={{ x: 0, y: 140, zoom: 1 }}
         onNodeDoubleClick={(_e, node) => openInspector(node.id)}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onlyRenderVisibleElements
         deleteKeyCode={null}
+        snapToGrid={snap}
+        snapGrid={[24, 24]}
         minZoom={0.2}
-        className="bg-[#0b0d12]"
+        className="bg-[var(--wx-bg-canvas)]"
       >
-        <Background gap={24} color="#1c2130" />
-        <Controls />
-        <MiniMap pannable zoomable />
+        <Background gap={24} color="var(--wx-bg-panel)" />
+        {showMinimap && <MiniMap pannable zoomable nodeColor="var(--wx-border)" maskColor="var(--wx-bg-canvas)" bgColor="var(--wx-bg-panel)" />}
       </ReactFlow>
 
+      <header className="wx-topbar">
+        <div className="wx-top-left">
+          <span className="wx-brand">Xan<span className="text-[var(--wx-accent)]">.</span></span>
+          <input aria-label="工作区显示名称" title="本机工作区显示名称；保存文件请使用另存为" className="w-32 min-w-0 rounded bg-transparent px-2 py-1.5 text-[13px]" value={workspaceName} onChange={(e) => { setWorkspaceName(e.target.value); localStorage.setItem("xan-workspace-label", e.target.value); }} />
+          <span className="wx-canvas-name border-l border-[var(--wx-border)] pl-4 text-[var(--wx-text-2)]">画布 1</span>
+          <button onClick={() => void fitView({ padding: .2, duration: 250 })} title="适应画布">{Math.round(zoom * 100)}%</button>
+        </div>
+        <span className="wx-workflow-label">工作流</span>
+        <div className="wx-top-right">
+          <button onClick={undoCanvas} disabled={!canUndo} title="撤销">↩</button>
+          <button onClick={redoCanvas} disabled={!canRedo} title="重做">↪</button>
+          <span className="mx-1 h-4 w-px bg-[var(--wx-border)]" />
+          <button aria-expanded={showAccounts} onClick={() => { setShowAccounts((v) => !v); setShowTasks(false); }}>Dola 账号</button>
+          <button aria-expanded={showTasks} onClick={() => { setShowTasks((v) => !v); setShowAccounts(false); }}>任务队列{queuedCount > 0 && <span className="ml-1 text-[var(--wx-accent)]">{queuedCount}</span>}</button>
+          <button onClick={exportProject}>导出</button>
+        </div>
+      </header>
       {window.wuxianDesktop && <DesktopProjectControls />}
 
-      {/* 顶栏 */}
-      <div className="absolute top-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-[#2a2f3d] bg-[#12151d]/95 px-2 py-1.5 shadow-xl">
-        <span className="px-2 text-sm font-semibold">无限画布工作台</span>
-        <span className="mx-1 h-4 w-px bg-[#2a2f3d]" />
-        <button
-          onClick={undoCanvas}
-          disabled={!canUndo}
-          className="rounded px-2 py-1 text-[12px] text-slate-300 hover:bg-white/10 disabled:opacity-40"
-          title="撤销"
-        >
-          ↩ 撤销
-        </button>
-        <button
-          onClick={redoCanvas}
-          disabled={!canRedo}
-          className="rounded px-2 py-1 text-[12px] text-slate-300 hover:bg-white/10 disabled:opacity-40"
-          title="重做"
-        >
-          ↪ 重做
-        </button>
-        <span className="mx-1 h-4 w-px bg-[#2a2f3d]" />
-        <button
-          onClick={() => {
-            setShowAccounts((v) => !v);
-            setShowTasks(false);
-          }}
-          className="rounded px-2 py-1 text-[12px] text-slate-300 hover:bg-white/10"
-        >
-          Dola 账号
-        </button>
-        <button
-          onClick={() => {
-            setShowTasks((v) => !v);
-            setShowAccounts(false);
-          }}
-          className="rounded px-2 py-1 text-[12px] text-slate-300 hover:bg-white/10"
-        >
-          任务队列{queuedCount > 0 && <span className="ml-1 text-cyan-300">({queuedCount})</span>}
-        </button>
-        <button
-          onClick={exportProject}
-          className="rounded px-2 py-1 text-[12px] text-slate-300 hover:bg-white/10"
-        >
-          导出
-        </button>
+      <div className="wx-canvas-tools wx-toolbar">
+        <button onClick={() => void fitView({ padding: .2, duration: 250 })} title="适应画布" aria-label="适应画布"><StudioIcon name="fit" /></button>
+        <button onClick={() => setShowMinimap((v) => !v)} title="切换小地图" aria-label="切换小地图" aria-pressed={showMinimap}><StudioIcon name="map" /></button>
+        <button onClick={() => setShowEdges((v) => !v)} title={showEdges ? "隐藏节点连线" : "显示节点连线"} aria-label="切换节点连线" aria-pressed={showEdges}><StudioIcon name="link" /></button>
+        <button onClick={() => setSnap((v) => !v)} title="网格吸附" aria-label="网格吸附" aria-pressed={snap}><StudioIcon name="grid" /></button>
+        <button onClick={() => setShowHelp((v) => !v)} title="快捷键" aria-label="快捷键" aria-expanded={showHelp}><StudioIcon name="keyboard" /></button>
+        <span className="h-4 w-px bg-[var(--wx-border)]" />
+        <button onClick={() => void zoomOut()} title="缩小" aria-label="缩小">−</button>
+        <span className="w-10 text-center text-[11px]">{Math.round(zoom * 100)}%</span>
+        <button onClick={() => void zoomIn()} title="放大" aria-label="放大">+</button>
       </div>
-
-      {/* 左侧资产抽屉 */}
-      <div className="absolute top-16 left-3 z-20 w-[180px] rounded-xl border border-[#2a2f3d] bg-[#12151d]/95 p-3 shadow-xl">
-        <div className="mb-2 text-[12px] font-semibold text-slate-300">角色资产</div>
-        <div className="space-y-1">
-          {characters.map((c) => (
-            <div key={c.id} className="rounded bg-white/[0.04] px-2 py-1.5 text-[12px] text-slate-200">
-              {c.name}
-              <span className="ml-1 text-[10px] text-slate-500">{c.age}</span>
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={addCharacter}
-          className="mt-2 w-full rounded bg-white/5 py-1.5 text-[12px] text-slate-300 hover:bg-white/10"
-        >
-          + 新建角色
-        </button>
-        <p className="mt-3 text-[10px] leading-relaxed text-slate-600">
-          双击画布空白处添加节点；双击节点进入精修台；Delete 删除选中；方向键微调。
-        </p>
-      </div>
-
+      {showHelp && <aside className="wx-panel wx-help"><strong className="text-[var(--wx-text-1)]">画布快捷键</strong><p>双击空白：添加节点 · 双击节点：精修</p><p>Delete：删除 · 方向键：微调 · Shift：10px / 框选</p><p>⌘ / Ctrl + C、V：复制粘贴 · Esc：收起菜单</p></aside>}
+      <nav className="wx-panel wx-dock" aria-label="创作工具">
+        <button className="wx-add-button" onClick={openAddMenu} title="添加节点" aria-label="添加节点" aria-expanded={!!menu}><StudioIcon name="plus" size={22} /></button>
+        <button onClick={() => setShowAssets((v) => !v)} aria-expanded={showAssets}><StudioIcon name="roleStudio" />角色资产</button>
+        <button onClick={addCharacter}><StudioIcon name="plus" />新建角色</button>
+        <button onClick={() => { setShowTasks((v) => !v); setShowAccounts(false); }}><StudioIcon name="tasks" />任务</button>
+      </nav>
+      {showAssets && <aside className="wx-panel absolute bottom-24 left-1/2 z-30 w-72 -translate-x-1/2 p-4">
+        <div className="mb-3 flex justify-between text-sm"><h2>角色资产</h2><button onClick={() => setShowAssets(false)} aria-label="关闭角色资产">×</button></div>
+        <div className="max-h-64 space-y-2 overflow-auto">{characters.map((c) => <button key={c.id} className="flex w-full items-center gap-3 rounded-lg bg-[var(--wx-bg-hover)] p-3 text-left text-xs" onClick={() => { const n = graph.nodes.find((n) => n.id === c.roleNodeId); if (n) void fitView({ nodes: [{ id: n.id }], maxZoom: 1, padding: .5 }); }}><StudioIcon name="roleStudio" /><span>{c.name}</span><span className="ml-auto text-[var(--wx-text-2)]">{c.age}</span></button>)}</div>
+      </aside>}
       {showAccounts && (window.wuxianDesktop ? <DesktopAccountsPanel onClose={() => setShowAccounts(false)} /> : <AccountsPanel onClose={() => setShowAccounts(false)} />)}
       {showTasks && <TaskQueuePanel onClose={() => setShowTasks(false)} />}
 
-      {/* 双击建节点菜单 */}
-      {menu && (
-        <div
-          className="fixed z-40 w-[200px] rounded-xl border border-[#2a2f3d] bg-[#12151d] p-2 shadow-2xl"
-          style={{ left: Math.min(menu.x, window.innerWidth - 220), top: Math.min(menu.y, window.innerHeight - 320) }}
-        >
-          <div className="px-2 py-1 text-[11px] text-slate-500">在此创建节点</div>
-          {NODE_TYPE_META.map((m) => (
-            <button
-              key={m.type}
-              onClick={() => createNode(m.type, menu.flowX, menu.flowY)}
-              className="block w-full rounded px-2 py-1.5 text-left text-[13px] text-slate-200 hover:bg-white/10"
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-      )}
-
+      {menu && <div className="wx-panel wx-create-menu" role="dialog" aria-label="添加节点" onKeyDown={(e) => { if (e.key === "Escape") setMenu(null); }} style={{ left: Math.max(12, Math.min(menu.x, window.innerWidth - 312)), top: Math.max(76, Math.min(menu.y, window.innerHeight - 600)) }}>
+        <div className="mb-2 flex items-center justify-between px-1"><strong className="text-[13px]">添加节点</strong><button onClick={() => setMenu(null)} aria-label="关闭添加节点" style={{ width: "auto", padding: "4px 8px" }}>×</button></div>
+        <input autoFocus aria-label="搜索画布节点" placeholder="搜索画布节点" value={query} onChange={(e) => setQuery(e.target.value)} />
+        {groups.map((group) => {
+          const items = NODE_TYPE_META.filter((m) => group.types.includes(m.type) && m.label.toLowerCase().includes(query.toLowerCase()));
+          return items.length > 0 && <section key={group.label}><h3 className="wx-menu-section">{group.label}</h3>{items.map((m) => <button key={m.type} onClick={() => createNode(m.type, menu.flowX, menu.flowY)}><StudioIcon name={m.type} /><span>{m.label}</span><span className="ml-auto text-[var(--wx-text-3)]">+</span></button>)}</section>;
+        })}
+        {!NODE_TYPE_META.some((m) => m.label.toLowerCase().includes(query.toLowerCase())) && <p className="p-4 text-[var(--wx-text-2)]">没有找到节点，试试“分镜”或“视频”。</p>}
+      </div>}
       <GridSplitterModal />
       <FrameBreakdownModal />
       <DirectorInspectorDrawer />
