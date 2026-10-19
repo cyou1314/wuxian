@@ -6,3 +6,7 @@ build/
 *.log
 .DS_Store
 public/uploads/
+
+.next/
+release/
+*.tsbuildinfo

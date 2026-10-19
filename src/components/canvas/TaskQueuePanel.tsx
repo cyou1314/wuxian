@@ -41,7 +41,7 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
   const run = async () => {
     const pool = getDolaPoolSync();
     if (!pool) {
-      setHint("请先在账号面板解锁并添加 Dola 账号");
+      setHint("请先在账号面板添加并登录 Dola 账号");
       return;
     }
     const queued = tasks.filter((t) => t.status === "queued");
@@ -146,7 +146,7 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
         {running ? "执行中…" : "按额度执行队列"}
       </button>
       <p className="mt-2 text-[10px] leading-relaxed text-slate-600">
-        执行需在已登录真实页面上下文或家宽出口环境；当前环境不满足时任务会如实报错。
+        {window.wuxianDesktop ? "请先在账号窗口完成登录。执行后可在此查看进度和生成结果。" : "执行需在已登录真实页面上下文或家宽出口环境；当前环境不满足时任务会如实报错。"}
       </p>
     </div>
   );

@@ -32,7 +32,13 @@ LibTV 形态 × Dola 生成引擎 × 多账号额度控制。
 - `docs/architecture.md` — 架构设计
 - `docs/roadmap.md` — 路线图
 
-## 状态
+## 桌面版（2026-10-19）
+
+已加入 Electron 桌面入口、原生项目打开/保存、自动恢复、独立 Dola 登录会话，以及 Windows / macOS 安装包构建配置。
+开发运行：`npm ci` 后执行 `npm run desktop:dev`。详细说明见 [桌面版文档](docs/desktop.md)。
+真实生成和 Windows / macOS 真机验收仍待完成。
+
+## 原有 Web 原型状态
 
 2026-10-18：项目立项，统一方向为 LibTV 形态 × Dola 引擎。Phase 1–6 代码全部完成并推送：
 类型契约、7+5 提示词编译器、AutoLink、DAG 调度、Dola 引擎（含多账号额度池与执行器）、

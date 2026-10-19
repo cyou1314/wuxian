@@ -1,4 +1,6 @@
 "use client";
+import DesktopProjectControls from "./DesktopProjectControls";
+import DesktopAccountsPanel from "./DesktopAccountsPanel";
 
 /**
  * InfiniteCanvasWorkbench — 无限画布工作台主视口（Phase 5）
@@ -423,6 +425,8 @@ function WorkbenchInner() {
         <MiniMap pannable zoomable />
       </ReactFlow>
 
+      {window.wuxianDesktop && <DesktopProjectControls />}
+
       {/* 顶栏 */}
       <div className="absolute top-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-[#2a2f3d] bg-[#12151d]/95 px-2 py-1.5 shadow-xl">
         <span className="px-2 text-sm font-semibold">无限画布工作台</span>
@@ -492,7 +496,7 @@ function WorkbenchInner() {
         </p>
       </div>
 
-      {showAccounts && <AccountsPanel onClose={() => setShowAccounts(false)} />}
+      {showAccounts && (window.wuxianDesktop ? <DesktopAccountsPanel onClose={() => setShowAccounts(false)} /> : <AccountsPanel onClose={() => setShowAccounts(false)} />)}
       {showTasks && <TaskQueuePanel onClose={() => setShowTasks(false)} />}
 
       {/* 双击建节点菜单 */}

@@ -41,6 +41,10 @@ export interface CanvasSnapshot {
   breakdowns: Record<string, FrameBreakdown>;
 }
 
+export function getCanvasSnapshot(): CanvasSnapshot {
+  return pickSnapshot(useCanvasStore.getState());
+}
+
 function pickSnapshot(s: CanvasStore): CanvasSnapshot {
   return {
     graph: s.graph,
@@ -360,7 +364,7 @@ async function idbGet(key: string): Promise<CanvasSnapshot | null> {
 }
 
 /** 浏览器端自动接线：启动时恢复快照，变更后防抖 800ms 写入 */
-if (typeof window !== "undefined" && typeof indexedDB !== "undefined") {
+if (typeof window !== "undefined" && !window.wuxianDesktop && typeof indexedDB !== "undefined") {
   void idbGet(IDB_KEY).then((snap) => {
     if (snap && Array.isArray(snap.graph?.nodes)) {
       useCanvasStore.setState(pickSnapshot({ ...useCanvasStore.getState(), ...snap }));

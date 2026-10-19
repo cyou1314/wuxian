@@ -1,0 +1,48 @@
+appId: com.wuxian.workbench
+productName: 无限画布
+asar: true
+afterPack: scripts/verify-desktop-package.cjs
+directories:
+  app: desktop
+  output: release
+files:
+  - main.cjs
+  - preload.cjs
+  - project.cjs
+  - accounts.cjs
+  - package.json
+  - '!node_modules/**/*'
+extraResources:
+  - from: .next/standalone
+    to: web
+    filter:
+      - '**/*'
+      - '!**/.data/**'
+      - '!**/.env*'
+      - '!**/cache/**'
+  # Root node_modules needs its own mapping; the default copier skips it.
+  - from: .next/standalone/node_modules
+    to: web/node_modules
+    filter:
+      - '**/*'
+      - '!**/.env*'
+      - '!**/cache/**'
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+mac:
+  category: public.app-category.graphics-design
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+    - target: zip
+      arch: [x64, arm64]
+  hardenedRuntime: true
+  entitlements: desktop/entitlements.mac.plist
+  entitlementsInherit: desktop/entitlements.mac.plist
+artifactName: wuxian-${version}-${os}-${arch}.${ext}

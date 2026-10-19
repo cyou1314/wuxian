@@ -81,7 +81,7 @@ export default function VideoGenNode(props: NodeProps) {
     );
     const pool = getDolaPoolSync();
     if (!pool) {
-      setError("请先在顶栏添加 Dola 账号并解锁");
+      setError("请先在账号面板添加并登录 Dola 账号");
       return;
     }
     const task = createVideoTask(pool, {

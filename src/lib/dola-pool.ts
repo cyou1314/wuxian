@@ -6,6 +6,7 @@
  */
 import {
   DolaAccountPool,
+  DolaClient,
   createAesGcmVault,
   type CookieVault,
 } from "@/lib/dola-engine";
@@ -49,4 +50,24 @@ export function getDolaPoolSync(): DolaAccountPool | null {
 export function lockDolaPool(): void {
   pool = null;
   vault = null;
+}
+
+/** Desktop credentials stay in isolated Chromium sessions, never in the canvas. */
+export async function getDesktopDolaPool(): Promise<DolaAccountPool> {
+  const bridge = window.wuxianDesktop;
+  if (!bridge) throw new Error("请在桌面应用中使用账号登录");
+  if (!pool) {
+    pool = new DolaAccountPool({
+      vault: { encrypt: async () => { throw new Error("桌面版请使用网页登录"); }, decrypt: async () => "" },
+      clientForAccount: (id) => new DolaClient("", {
+        fetchImpl: async (input, init) => {
+          if (init?.signal?.aborted) throw new Error("请求已取消");
+          const result = await bridge.request(id, new URL(String(input)).pathname, String(init?.body ?? "{}"));
+          return new Response(result.text, { status: result.status });
+        },
+      }),
+    });
+  }
+  pool.syncDesktopAccounts(await bridge.accounts());
+  return pool;
 }

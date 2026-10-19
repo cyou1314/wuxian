@@ -401,16 +401,19 @@ function digCreationBlocks(msg: JsonObj): unknown[] {
 export interface AccountPoolOptions {
   vault: CookieVault;
   fetchImpl?: typeof fetch;
+  clientForAccount?: (accountId: string) => DolaClient;
 }
 
 export class DolaAccountPool {
   private accounts: DolaAccount[] = [];
   private vault: CookieVault;
   private fetchImpl?: typeof fetch;
+  private clientForAccount?: (accountId: string) => DolaClient;
 
   constructor(opts: AccountPoolOptions) {
     this.vault = opts.vault;
     this.fetchImpl = opts.fetchImpl;
+    this.clientForAccount = opts.clientForAccount;
   }
 
   /** 新增账号：明文 cookie 只在内存停留，入库即加密 */
@@ -426,6 +429,19 @@ export class DolaAccountPool {
     };
     this.accounts.push(account);
     return account;
+  }
+
+  syncDesktopAccounts(accounts: { id: string; label: string }[]): void {
+    const previous = new Map(this.accounts.map((account) => [account.id, account]));
+    this.accounts = accounts.map((account) => ({
+      quotaRemaining: null,
+      quotaDailyUsed: 0,
+      status: "active",
+      updatedAt: Date.now(),
+      ...previous.get(account.id),
+      ...account,
+      cookieCipher: "",
+    }));
   }
 
   removeAccount(id: string): void {
@@ -474,6 +490,7 @@ export class DolaAccountPool {
   async clientFor(accountId: string): Promise<DolaClient> {
     const acc = this.accounts.find((a) => a.id === accountId);
     if (!acc) throw new Error(`账号不存在：${accountId}`);
+    if (this.clientForAccount) return this.clientForAccount(accountId);
     const cookie = await this.vault.decrypt(acc.cookieCipher);
     return new DolaClient(cookie, { fetchImpl: this.fetchImpl });
   }

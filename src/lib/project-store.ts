@@ -20,7 +20,7 @@ export interface ServerData {
   characters: Record<string, CharacterAsset[]>;
 }
 
-const FILE = path.join(process.cwd(), ".data", "wuxian-server.json");
+const FILE = path.join(process.env.WUXIAN_DATA_DIR ?? path.join(process.cwd(), ".data"), "wuxian-server.json");
 
 const EMPTY: ServerData = { sessions: [], projects: {}, tasks: [], characters: {} };
 
