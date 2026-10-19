@@ -48,8 +48,13 @@
   验证：`tsc` 零错误，`next build` 通过；签名器离线产出 16 字节 a_bogus（与逆向结论一致）；
   DolaClient 写签/读不签/无 signer 时旧行为三项全过；代理冒烟：非法域名 400、
   skill/pack 透传得 Dola 710012001（鉴权错，链路通）、/chat/completion 代签后得
-  STREAM_ERROR 710012001（签名流程无崩溃）。**未验证**：签名在 Dola 服务端的实际接受度
-  （VM 机房出口签了也照拦，需在家宽出口用真实 cookie 再测一次，不花额度测不了）。
+  STREAM_ERROR 710012001（签名流程无崩溃）。
+- 2026-10-19 10:0x **签名服务端接受度验证通过**（Mac 真机，零额度消耗）：在用户 Mac Chrome 的 Dola
+  页面控制台注入官方 webmssdk_1.0.0.44（CDN 直链），`frontierSign` 产出 16 字节 X-Bogus
+  （与自研 signer 离线输出一致）；带签名发 `POST /chat/completion`（空 body 纯文本探测），
+  服务端返回 `STREAM_ERROR 7100202`（参数错）而**不是** `710022002`（签名/IP 拦截）——
+  证明家宽 IP + 该签名可通过 Dola 签名关。wuxian 的 `/api/dola/fetch` 代签链路服务端逻辑已就绪，
+  待用户在 Mac 本地跑起 wuxian 后做一次真实视频提交闭环。
 - 2026-10-18 优化 #1（生成闭环）：DolaTask 新增 `nodeId` 字段（任务 ↔ 发起节点双向绑定）；
   TaskQueuePanel 执行队列成功后自动把无水印直链写回对应视频/分镜节点（未知节点静默跳过，
   失败任务不回写）。`tsc` 零错误，`next build` 通过，回写逻辑运行时验证通过。
