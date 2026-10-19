@@ -55,9 +55,9 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
     setHint("");
     try {
       await drainTaskQueue(pool, queued, {
-        // 浏览器无法直发 Dola（CORS + forbidden Cookie header），
-        // 经本机 /api/dola/fetch 代发：家宽出口 + 服务端 a_bogus 签名。
+        // 桌面版使用独立账号页面会话；Web 版使用同源服务端代理。
         clientFactory: async (accountId: string) => {
+          if (window.wuxianDesktop) return pool.clientFor(accountId);
           const cookie = await pool.cookieFor(accountId);
           return new DolaClient(cookie, { fetchImpl: createProxyFetch(cookie) });
         },

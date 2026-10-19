@@ -62,3 +62,5 @@ npm run test:desktop:smoke
 当前 Linux 环境已验证真实 Electron 启动、编辑与重启恢复，以及解包后的独立程序启动；Windows / macOS 工作流尚未执行。
 
 正式分发前仍需完成 Windows / macOS 真机验收、应用图标、Windows 代码签名、macOS Developer ID 签名与公证。自动更新尚未接入。仓库的 macOS entitlement 已启用 JIT，正式签名配置需要结合签名证书验证。
+
+合并现有 Web 签名代理后：桌面版继续使用独立账号页面会话，Web 版保留 `/api/dola/fetch`；签名 SDK 分块通过 Next.js 文件追踪随 standalone 一并分发。
