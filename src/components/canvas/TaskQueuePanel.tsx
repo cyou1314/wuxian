@@ -11,6 +11,8 @@ import { useCanvasStore } from "@/store/useCanvasStore";
 import { useTaskStore } from "@/store/useTaskStore";
 import { getDolaPoolSync } from "@/lib/dola-pool";
 import { drainTaskQueue } from "@/lib/dola-executor";
+import { DolaClient } from "@/lib/dola-engine";
+import { createProxyFetch } from "@/lib/dola-proxy";
 import type { DolaTask, DolaTaskStatus } from "@/types/libtv-schema";
 
 const STATUS_LABEL: Record<DolaTaskStatus, string> = {
@@ -53,6 +55,12 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
     setHint("");
     try {
       await drainTaskQueue(pool, queued, {
+        // 浏览器无法直发 Dola（CORS + forbidden Cookie header），
+        // 经本机 /api/dola/fetch 代发：家宽出口 + 服务端 a_bogus 签名。
+        clientFactory: async (accountId: string) => {
+          const cookie = await pool.cookieFor(accountId);
+          return new DolaClient(cookie, { fetchImpl: createProxyFetch(cookie) });
+        },
         onTaskUpdate: (t: DolaTask) => {
           updateTask(t.id, t as unknown as Record<string, unknown>);
           // 生成闭环：成功后把结果直链自动写回发起任务的画布节点
