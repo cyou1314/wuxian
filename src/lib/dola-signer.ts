@@ -12,7 +12,8 @@
  *   - 仅服务端（Node）可用：依赖 node:vm / node:fs，浏览器导入会抛错。
  *   - 签名只解决「签名关」；VM 机房出口另有 IP 风控，签名请求同样被拦。
  *     实际提交必须跑在家宽出口（用户本地 next dev / Electron webview）。
- *   - vendor/webmssdk_1.0.0.44.es5.js 为字节专有 SDK，仅随私有仓库分发。
+ *   - vendor/webmssdk_1.0.0.44.part{0..3}.js 为字节专有 SDK（切块存放），
+ *     仅随私有仓库分发。
  */
 import vm from "node:vm";
 import fs from "node:fs";
@@ -22,21 +23,25 @@ if (typeof window !== "undefined") {
   throw new Error("dola-signer 仅限服务端（Node）使用，浏览器请走 /api/dola/execute");
 }
 
-const SDK_FILENAME = "webmssdk_1.0.0.44.es5.js";
+const SDK_BASENAME = "webmssdk_1.0.0.44";
+const SDK_PARTS = 4;
+// 注：SDK 被切成 4 个 ~80KB 分块存放（push_files 单参数 128KB 上限），
+// 运行时按顺序拼接，与原文件逐字节一致。
 
 /**
- * 定位 SDK 文件。Next.js 打包后 __dirname 不再指向源码目录，
+ * 定位 SDK 分块。Next.js 打包后 __dirname 不再指向源码目录，
  * 因此按顺序尝试：模块旁 vendor/ → 项目根 src/lib/vendor/。
  */
-function findSdkPath(): string {
-  const candidates = [
-    path.join(__dirname, "vendor", SDK_FILENAME),
-    path.join(process.cwd(), "src", "lib", "vendor", SDK_FILENAME),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) return p;
+function findSdkParts(): string[] {
+  const dirs = [path.join(__dirname, "vendor"), path.join(process.cwd(), "src", "lib", "vendor")];
+  for (const dir of dirs) {
+    const parts = Array.from(
+      { length: SDK_PARTS },
+      (_, i) => path.join(dir, `${SDK_BASENAME}.part${i}.js`),
+    );
+    if (parts.every((p) => fs.existsSync(p))) return parts;
   }
-  throw new Error(`签名 SDK 缺失，尝试过：${candidates.join(" / ")}`);
+  throw new Error(`签名 SDK 分块缺失（${SDK_BASENAME}.part0..3.js），尝试过：${dirs.join(" / ")}`);
 }
 
 interface Acrawler {
@@ -132,9 +137,11 @@ function getAcrawler(): Acrawler {
   sandbox.globalThis = sandbox;
   mockWindow.window = mockWindow;
 
-  const sdkPath = findSdkPath();
+  const sdkCode = findSdkParts()
+    .map((p) => fs.readFileSync(p, "utf8"))
+    .join("");
   vm.createContext(sandbox);
-  vm.runInContext(fs.readFileSync(sdkPath, "utf8"), sandbox, { filename: "webmssdk.js" });
+  vm.runInContext(sdkCode, sandbox, { filename: "webmssdk.js" });
 
   const ac = (sandbox as Record<string, unknown>).byted_acrawler as Acrawler | undefined;
   if (!ac || typeof ac.frontierSign !== "function") {
