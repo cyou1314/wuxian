@@ -5,7 +5,10 @@
  *   skill/pack → /chat/completion (SSE) → 轮询 /im/chain/single → /samantha/video/get_play_info
  *
  * 硬约束（已验证，不可绕过）：
- *  - 写入接口（/chat/completion）在机房出口会被 710022002 拦截（a_bogus 签名强制）；
+ *  - 写入接口（/chat/completion）强制 a_bogus 签名：DolaClient 支持注入 signer
+ *   （见 ./dola-signer，webmssdk frontierSign），无签名一律 710022002；
+ *  - 机房出口另有 IP 风控：即使签名正确也会被 710022002 拦截，
+ *    实际提交必须跑在家宽出口（用户本地 next dev / Electron webview）；
  *    本客户端必须运行在「已登录真实页面上下文」或「家宽出口」。
  *  - 只读接口（/samantha/skill/pack）无签名要求，任意出口可调。
  *  - 认证：session cookie；额度无独立 API，从提交 SSE 的配额文本解析。
@@ -39,6 +42,12 @@ export const DOLA_MODEL_COST_FACTOR: Record<DolaModel, number> = {
 export interface DolaRequestOptions {
   timeoutMs?: number;
   fetchImpl?: typeof fetch;
+  /**
+   * 写接口签名函数。提供后，post() 会在调用写路径（/chat/completion）
+   * 前对 URL 做 a_bogus 签名；只读路径不受影响。
+   * 浏览器端请使用服务端代签（/api/dola/execute），不要直接传入。
+   */
+  signer?: (url: string) => Promise<string> | string;
 }
 
 interface JsonObj {
@@ -97,18 +106,29 @@ export class DolaClient {
   private cookie: string;
   private fetchImpl: typeof fetch;
   private timeoutMs: number;
+  private signer?: (url: string) => Promise<string> | string;
 
   constructor(cookie: string, opts?: DolaRequestOptions) {
     this.cookie = cookie;
     this.fetchImpl = opts?.fetchImpl ?? fetch;
     this.timeoutMs = opts?.timeoutMs ?? 60000;
+    this.signer = opts?.signer;
+  }
+
+  /** 需要签名的写路径（2026-10-16 逆向结论：无签名一律 710022002） */
+  private needsSign(path: string): boolean {
+    return path.startsWith("/chat/completion");
   }
 
   private async post<T>(path: string, body: unknown): Promise<T> {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), this.timeoutMs);
     try {
-      const res = await this.fetchImpl(`${DOLA_BASE}${path}`, {
+      let url = `${DOLA_BASE}${path}`;
+      if (this.signer && this.needsSign(path)) {
+        url = await this.signer(url);
+      }
+      const res = await this.fetchImpl(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -476,6 +496,17 @@ export class DolaAccountPool {
     if (!acc) throw new Error(`账号不存在：${accountId}`);
     const cookie = await this.vault.decrypt(acc.cookieCipher);
     return new DolaClient(cookie, { fetchImpl: this.fetchImpl });
+  }
+
+  /**
+   * 取账号明文 cookie（仅内存）。用于经 /api/dola/fetch 服务端代理的场景：
+   * 浏览器无法直发 Dola 请求（CORS + forbidden Cookie header），
+   * 由本机服务端代发（家宽出口 + a_bogus 签名）。
+   */
+  async cookieFor(accountId: string): Promise<string> {
+    const acc = this.accounts.find((a) => a.id === accountId);
+    if (!acc) throw new Error(`账号不存在：${accountId}`);
+    return this.vault.decrypt(acc.cookieCipher);
   }
 
   /** 每日零点调用：重置日消耗与 exhausted 状态 */

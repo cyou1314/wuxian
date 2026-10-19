@@ -38,6 +38,18 @@
 
 ## 优化记录
 
+- 2026-10-19 优化 #2（a_bogus 签名接入）：把逆向破解的 webmssdk 签名器接进提交链路——
+  新增 `src/lib/dola-signer.ts`（Node vm 沙箱直调 `frontierSign`，SDK vendor 进
+  `src/lib/vendor/`，多路径回退定位）；`DolaClient` 支持 `signer` 注入，
+  写路径（/chat/completion）自动带 a_bogus，读路径不受影响；
+  新增 `POST /api/dola/fetch` 服务端代签代理（仅允许 dola.com 域名，cookie 只过内存），
+  `TaskQueuePanel` 经 `createProxyFetch` + `clientFactory` 走代理执行
+  （浏览器直发会被 CORS/forbidden Cookie header 拦死）。
+  验证：`tsc` 零错误，`next build` 通过；签名器离线产出 16 字节 a_bogus（与逆向结论一致）；
+  DolaClient 写签/读不签/无 signer 时旧行为三项全过；代理冒烟：非法域名 400、
+  skill/pack 透传得 Dola 710012001（鉴权错，链路通）、/chat/completion 代签后得
+  STREAM_ERROR 710012001（签名流程无崩溃）。**未验证**：签名在 Dola 服务端的实际接受度
+  （VM 机房出口签了也照拦，需在家宽出口用真实 cookie 再测一次，不花额度测不了）。
 - 2026-10-18 优化 #1（生成闭环）：DolaTask 新增 `nodeId` 字段（任务 ↔ 发起节点双向绑定）；
   TaskQueuePanel 执行队列成功后自动把无水印直链写回对应视频/分镜节点（未知节点静默跳过，
   失败任务不回写）。`tsc` 零错误，`next build` 通过，回写逻辑运行时验证通过。

@@ -9,11 +9,18 @@
  *   或「家宽出口」运行；VM 机房出口裸调 /chat/completion 会被 710022002 拦截。
  * 本模块不伪装环境，失败时如实返回错误。
  */
-import { DolaAccountPool } from "./dola-engine";
+import { DolaAccountPool, DolaClient } from "./dola-engine";
 import type { DolaTask } from "@/types/libtv-schema";
 
 export interface ExecutorEvents {
   onTaskUpdate?: (task: DolaTask) => void;
+  /**
+   * 自定义 client 构造。默认用 pool.clientFor（直连，适合 Node/Electron 主进程）。
+   * 浏览器工作台请传入经 /api/dola/fetch 代理的版本：
+   *   clientFactory: async (accountId) =>
+   *     new DolaClient(await pool.cookieFor(accountId), { fetchImpl: createProxyFetch(await pool.cookieFor(accountId)) })
+   */
+  clientFactory?: (accountId: string) => Promise<DolaClient>;
 }
 
 function fail(task: DolaTask, error: string): DolaTask {
@@ -42,7 +49,9 @@ export async function drainTaskQueue(
       continue;
     }
     try {
-      const client = await pool.clientFor(account.id);
+      const client = events?.clientFactory
+        ? await events.clientFactory(account.id)
+        : await pool.clientFor(account.id);
       if (task.kind === "video") {
         events?.onTaskUpdate?.({ ...task, status: "submitting", accountId: account.id });
         const { conversationId, quota } = await client.submitVideo({
