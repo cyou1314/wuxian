@@ -39,8 +39,8 @@
 ## 优化记录
 
 - 2026-10-19 优化 #2（a_bogus 签名接入）：把逆向破解的 webmssdk 签名器接进提交链路——
-  新增 `src/lib/dola-signer.ts`（Node vm 沙箱直调 `frontierSign`，SDK vendor 进
-  `src/lib/vendor/`，多路径回退定位）；`DolaClient` 支持 `signer` 注入，
+  新增 `src/lib/dola-signer.ts`（Node vm 沙箱直调 `frontierSign`，SDK 切 4 块 vendor 进
+  `src/lib/vendor/`（push_files 单参数 128KB 上限），运行时拼接校验一致，多路径回退定位）；`DolaClient` 支持 `signer` 注入，
   写路径（/chat/completion）自动带 a_bogus，读路径不受影响；
   新增 `POST /api/dola/fetch` 服务端代签代理（仅允许 dola.com 域名，cookie 只过内存），
   `TaskQueuePanel` 经 `createProxyFetch` + `clientFactory` 走代理执行
