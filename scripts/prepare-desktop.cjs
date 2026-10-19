@@ -11,5 +11,12 @@ const path = require('node:path');
   await fs.rm(path.join(dest, 'public', 'uploads'), { recursive: true, force: true });
   // Never ship local API data, account state or build caches in the installer.
   await fs.rm(path.join(dest, '.data'), { recursive: true, force: true });
+  const mediaBin = path.join(root, 'desktop', 'bin');
+  await fs.mkdir(mediaBin, { recursive: true });
+  if (process.env.XAN_FFMPEG_PATH) {
+    const target = path.join(mediaBin, process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg');
+    await fs.copyFile(process.env.XAN_FFMPEG_PATH, target);
+    await fs.chmod(target, 0o755);
+  }
   console.log('桌面 Web 资源已就绪');
 })().catch((error) => { console.error(error.message); process.exitCode = 1; });

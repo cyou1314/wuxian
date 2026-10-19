@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
   }
   try {
     const bytes = await fs.readFile(path.join(base, "uploads", name));
-    const types: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".mp4": "video/mp4", ".webm": "video/webm", ".mp3": "audio/mpeg", ".wav": "audio/wav" };
+    const types: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime", ".m4a": "audio/mp4", ".mp3": "audio/mpeg", ".wav": "audio/wav" };
     const mime = types[path.extname(name).toLowerCase()] ?? "application/octet-stream";
     return new NextResponse(new Uint8Array(bytes), { headers: {
       "Content-Type": mime, "X-Content-Type-Options": "nosniff",

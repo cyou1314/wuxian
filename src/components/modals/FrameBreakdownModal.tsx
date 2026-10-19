@@ -6,6 +6,7 @@
  * 叙事分镜 / 精彩运镜 / 动作片段 / 音频参考四个维度，
  * 每条笔记带毫秒级时间点（输入为秒），按时间排序，持久化到 store。
  */
+import FrameExtractor from "../canvas/FrameExtractor";
 import { useState } from "react";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import { useUIStore } from "@/store/useUIStore";
@@ -53,7 +54,7 @@ export default function FrameBreakdownModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--wx-bg-canvas)]/70 p-6">
-      <div className="flex max-h-full w-full max-w-2xl flex-col rounded-xl border border-[var(--wx-border)] bg-[var(--wx-bg-panel)] p-5">
+      <div className="flex max-h-full w-full max-w-3xl overflow-y-auto flex-col rounded-xl border border-[var(--wx-border)] bg-[var(--wx-bg-panel)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">逐帧拉片 · {title}</h2>
           <button onClick={close} className="rounded px-2 text-[var(--wx-text-2)] hover:bg-[var(--wx-text-1)]/10">
@@ -61,6 +62,7 @@ export default function FrameBreakdownModal() {
           </button>
         </div>
 
+        {node.data.kind==="videoGen"&&node.data.videoUrl&&<FrameExtractor key={nodeId} id={nodeId} url={node.data.videoUrl}/> }
         <div className="mb-4 flex gap-2">
           {DIMS.map((d) => (
             <button

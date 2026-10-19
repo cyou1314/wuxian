@@ -10,6 +10,11 @@ export interface DesktopProject {
 export interface DesktopAccount { id: string; label: string }
 export interface DesktopBridge {
   platform: string;
+  upload(file: { name: string; type: string; bytes: ArrayBuffer }): Promise<{ url: string }>;
+  downloadMedia(url: string): Promise<void>;
+  mediaCapabilities(): Promise<{ ffmpeg: boolean }>;
+  processMedia(request: import('@/lib/studio-types').MediaRequest): Promise<Array<{url: string; name: string; kind: 'image'|'video'|'audio'}>>;
+
   ready(): Promise<void>;
   loadRecovery(): Promise<DesktopProject | null>;
   autosave(project: DesktopProject): Promise<void>;

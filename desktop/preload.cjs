@@ -1,6 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('wuxianDesktop', {
   platform: process.platform,
+  upload: (file) => ipcRenderer.invoke('asset:upload', file),
+  downloadMedia: (url) => ipcRenderer.invoke('media:download', url),
+  mediaCapabilities: () => ipcRenderer.invoke('media:capabilities'),
+  processMedia: (request) => ipcRenderer.invoke('media:process', request),
   ready: () => ipcRenderer.invoke('desktop:ready'),
   loadRecovery: () => ipcRenderer.invoke('project:recovery'),
   autosave: (project) => ipcRenderer.invoke('project:autosave', project),

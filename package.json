@@ -41,7 +41,7 @@
     "desktop:setup": "node node_modules/electron/install.js",
     "test:desktop:smoke": "npm run desktop:setup && node scripts/smoke-desktop.cjs"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "desktop/main.cjs",
   "productName": "Xan"
 }

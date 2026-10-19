@@ -4,6 +4,8 @@
  * SmartClipNode — 智能剪辑与创意片头节点
  * 多视频节点聚合选择、去口水词粗剪开关、字幕开关、BGM 卡点、导出粗剪决策表
  */
+import {useEffect,useState} from "react";
+import {insertAsset,rememberAsset,uid} from "@/lib/studio";
 import type { NodeProps } from "@xyflow/react";
 import { NodeShell } from "./NodeShell";
 import { useCanvasStore } from "@/store/useCanvasStore";
@@ -19,10 +21,15 @@ export default function SmartClipNode(props: NodeProps) {
   const { id, selected } = props;
   const data = props.data as unknown as SmartClipNodeData;
   const stale = useCanvasStore((s) => s.graph.nodes.find((n) => n.id === id)?.stale ?? false);
-  const videoNodes = useCanvasStore((s) => s.graph.nodes.filter((n) => n.type === "videoGen"));
+  const videoNodes = useCanvasStore((s) => s.graph.nodes).filter((n) => n.type === "videoGen");
   const patchNodeData = useCanvasStore((s) => s.patchNodeData);
   const touchNode = useCanvasStore((s) => s.touchNode);
 
+  const [ready,setReady]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+  useEffect(()=>{void window.wuxianDesktop?.mediaCapabilities().then(v=>setReady(v.ffmpeg));},[]);
+  const concat=async()=>{setBusy(true);setMessage('');try{const urls=(data.sourceVideoNodeIds??[]).map(source=>videoNodes.find(n=>n.id===source)?.data).map(d=>d?.kind==='videoGen'?d.videoUrl:undefined);if(urls.length<2||urls.some(u=>!u))throw new Error('请按顺序选择至少两个已有视频素材的节点');
+    const outputs=await window.wuxianDesktop!.processMedia({operation:'concat',urls:urls as string[]});const node=useCanvasStore.getState().graph.nodes.find(n=>n.id===id)!;
+    for(const o of outputs){const asset={...o,id:uid('asset'),kind:'video' as const,source:'local' as const,createdAt:Date.now()};rememberAsset(asset);insertAsset(asset,{x:node.position.x+460,y:node.position.y});}setMessage('拼接完成，已加入资产库并创建视频节点');}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}};
   const selectedIds = data.sourceVideoNodeIds ?? [];
   const cuePoints = data.bgmCuePoints ?? [];
 
@@ -108,7 +115,7 @@ export default function SmartClipNode(props: NodeProps) {
               touchNode(id);
             }}
           />
-          去口水词粗剪
+          去口水词（仅决策表）
         </label>
         <label className="flex items-center gap-2 text-[11px] text-[var(--wx-text-2)]">
           <input
@@ -119,7 +126,7 @@ export default function SmartClipNode(props: NodeProps) {
               touchNode(id);
             }}
           />
-          字幕花字
+          字幕（仅决策表）
         </label>
       </div>
 
@@ -170,6 +177,8 @@ export default function SmartClipNode(props: NodeProps) {
         ))}
       </div>
 
+      <p className="mt-2 text-[11px] text-[var(--wx-text-3)]">拼接顺序：{selectedIds.map(x=>videoNodes.find(n=>n.id===x)?.label||x.slice(-6)).join(' → ')||'未选择'}。请使用分辨率及音轨结构一致的本机素材；字幕、去口水词与 BGM 标记仅用于决策表。</p>
+      <button className={`${ghostBtnCls} mt-2 w-full`} disabled={!ready||busy} title={ready?'在本机顺序拼接':'FFmpeg 不可用'} onClick={()=>void concat()}>{busy?'正在本地拼接…':'本地顺序拼接'}</button>{message&&<p role="status" className="mt-2 text-xs">{message}</p>}
       <button className={`${ghostBtnCls} mt-3 w-full`} onClick={handleExport}>
         导出粗剪决策表
       </button>

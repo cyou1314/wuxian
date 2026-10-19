@@ -51,6 +51,7 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
       setHint("没有排队中的任务");
       return;
     }
+    if (!window.confirm(`即将向 Dola 提交 ${queued.length} 个生成任务，可能消耗额度。是否继续？`)) return;
     setRunning(true);
     setHint("");
     try {
@@ -77,6 +78,8 @@ export default function TaskQueuePanel({ onClose }: { onClose: () => void }) {
           }
         },
       });
+    } catch (e) {
+      setHint(e instanceof Error ? e.message : "队列执行失败");
     } finally {
       setRunning(false);
     }

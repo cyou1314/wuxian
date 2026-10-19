@@ -4,11 +4,12 @@
  * VideoGenNode — 视频生成节点
  * 播放器 + 5 段式运动编辑器 + Dola 参数 + 毫秒级重拍选区 + 入队生成
  */
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { NodeProps } from "@xyflow/react";
 import NodeParameterPanel from "../canvas/NodeParameterPanel";
 import NodeQuickToolbar from "../canvas/NodeQuickToolbar";
 import StudioIcon from "../ui/StudioIcon";
+import VideoTools from "../canvas/VideoTools";
 import { NodeShell } from "./NodeShell";
 import { useCanvasStore } from "@/store/useCanvasStore";
 import { useUIStore } from "@/store/useUIStore";
@@ -26,6 +27,7 @@ import type {
 interface VideoGenData extends VideoGenNodeData {
   dolaParams?: { model: DolaModel; durationSec: number; ratio: DolaRatio };
   rawText?: string;
+  reshootNote?: string;
 }
 
 const MODELS: DolaModel[] = ["seedance_v2.5", "seedance_v2.0", "seedance_v1.0"];
@@ -63,6 +65,7 @@ export default function VideoGenNode(props: NodeProps) {
   const openBreakdown = useUIStore((s) => s.openBreakdown);
   const enqueueTask = useTaskStore((s) => s.enqueueTask);
   const task = useTaskStore((s) => s.tasks.find((t) => t.id === data.dolaTaskId));
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   const params = data.dolaParams ?? DEFAULT_PARAMS;
@@ -90,7 +93,7 @@ export default function VideoGenNode(props: NodeProps) {
       return;
     }
     const task = createVideoTask(pool, {
-      prompt: resolved.resolved,
+      prompt: [resolved.resolved, data.reshootNote ? `重拍修改要求：${data.reshootNote}` : ""].filter(Boolean).join("\n"),
       model: params.model,
       duration: params.durationSec,
       ratio: params.ratio,
@@ -104,6 +107,8 @@ export default function VideoGenNode(props: NodeProps) {
     patchNodeData(id, { dolaTaskId: task.id });
   };
 
+  useEffect(()=>{ const generate=(e:Event)=>{if((e as CustomEvent<string[]>).detail.includes(id))handleGenerate();};window.addEventListener("xan:generate",generate);return()=>window.removeEventListener("xan:generate",generate); });
+
   return (
     <NodeShell
       id={id}
@@ -114,13 +119,13 @@ export default function VideoGenNode(props: NodeProps) {
       width={340}
     >
       <div className="wx-media">
-        <span className="wx-media-badge">AI生成{task ? ` · ${task.status}` : ""}</span>
-        {data.videoUrl ? <video src={data.videoUrl} controls /> : <div className="wx-empty-media"><StudioIcon name="videoGen" /><span>让分镜动起来</span><span className="text-[11px]">选中节点，设置运动与生成参数</span></div>}
+        <span className="wx-media-badge">视频{task ? ` · ${task.status}` : ""}</span>
+        {data.videoUrl ? <video ref={videoRef} src={data.videoUrl} controls /> : <div className="wx-empty-media"><StudioIcon name="videoGen" /><span>让分镜动起来</span><span className="text-[11px]">选中节点，设置运动与生成参数</span></div>}
       </div>
       <NodeQuickToolbar visible={!!selected && inspectorId !== id}>
         <button onClick={() => openInspector(id)}>精修运动</button>
         <button onClick={() => openBreakdown(id)}>拉片</button>
-        <button onClick={() => setRanges([...ranges, { startMs: 0, endMs: 1000 }])}>重拍选区</button>
+        <VideoTools compact id={id} currentTime={()=>videoRef.current?.currentTime??0}/><button onClick={()=>document.querySelector(`[data-video-tools="${id}"]`)?.scrollIntoView({block:"nearest"})}>截图 / 重拍 / 本地工具</button>
       </NodeQuickToolbar>
       <NodeParameterPanel visible={!!selected && inspectorId !== id}>
       <div>
@@ -233,7 +238,7 @@ export default function VideoGenNode(props: NodeProps) {
 
       <div className="mt-2">
         <div className="mb-1 flex items-center justify-between">
-          <span className={labelCls}>毫秒级重拍选区</span>
+          <span className={labelCls}>选区备注（仅记录）</span>
           <button
             className={ghostBtnCls}
             onClick={() => setRanges([...ranges, { startMs: 0, endMs: 1000 }])}
@@ -287,21 +292,23 @@ export default function VideoGenNode(props: NodeProps) {
       </div>
 
       <div className="mt-2">
-        <label className={labelCls}>视频续写（上一段 vid / URL）</label>
+        <label className={labelCls}>续写来源备注（当前不提交续写参数）</label>
         <input
           className={inputCls}
           value={data.continueFrom ?? ""}
           onChange={(e) => patchNodeData(id, { continueFrom: e.target.value })}
           onBlur={() => touchNode(id)}
-          placeholder="可选"
+          placeholder="可选；当前只记录源链接"
         />
       </div>
 
+      {data.reshootNote !== undefined&&<label>重拍修改要求<textarea className={`${inputCls} mt-1`} value={data.reshootNote} onChange={e=>patchNodeData(id,{reshootNote:e.target.value})} placeholder="留空=原样重跑；也可写要改什么" /></label>}
+      <div data-video-tools={id}><VideoTools id={id} currentTime={()=>videoRef.current?.currentTime??0} /></div>
       {error && <div className="mt-2 text-[11px] text-[var(--wx-danger)]">{error}</div>}
 
       <div className="mt-3 flex gap-2">
         <button className={`${btnCls} wx-primary flex-1 py-2`} onClick={handleGenerate}>
-          生成视频
+          加入生成队列
         </button>
         <button className={ghostBtnCls} onClick={() => openBreakdown(id)}>
           拉片

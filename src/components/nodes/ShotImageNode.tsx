@@ -5,6 +5,8 @@
  * 2752×1536 预览、7 段式 AST 编辑器、编译提示词只读展示、raw 直发开关、
  * {{Image N}} 槽位、宫格切分与图层分离入口。
  */
+import {useState} from "react";
+import {chooseFiles,uploadAsset,downloadMedia} from "@/lib/studio-upload";
 import type { NodeProps } from "@xyflow/react";
 import NodeParameterPanel from "../canvas/NodeParameterPanel";
 import NodeQuickToolbar from "../canvas/NodeQuickToolbar";
@@ -15,8 +17,6 @@ import { useUIStore } from "@/store/useUIStore";
 import { compileImagePrompt } from "@/lib/prompt-compiler";
 import { IMAGE_SLOT_LABELS } from "@/types/libtv-schema";
 import type {
-  CanvasEdge,
-  CanvasNode,
   ImagePromptAST,
   ReferenceSlots,
   ShotImageNodeData,
@@ -35,14 +35,10 @@ export default function ShotImageNode(props: NodeProps) {
   const { id, selected } = props;
   const data = props.data as unknown as ShotData;
   const stale = useCanvasStore((s) => s.graph.nodes.find((n) => n.id === id)?.stale ?? false);
-  const position = useCanvasStore((s) => s.graph.nodes.find((n) => n.id === id)?.position);
   const patchNodeData = useCanvasStore((s) => s.patchNodeData);
   const touchNode = useCanvasStore((s) => s.touchNode);
-  const upsertNode = useCanvasStore((s) => s.upsertNode);
-  const addEdge = useCanvasStore((s) => s.addEdge);
   const inspectorId = useUIStore((s) => s.inspectorNodeId);
   const openInspector = useUIStore((s) => s.openInspector);
-  const openGridSplitter = useUIStore((s) => s.openGridSplitter);
 
   const patchAST = (fn: (draft: ImagePromptAST) => void) => {
     const next = structuredClone(data.imagePromptAST);
@@ -51,20 +47,9 @@ export default function ShotImageNode(props: NodeProps) {
   };
   const blurTouch = () => touchNode(id);
 
-  const layerSplit = () => {
-    if (!data.imageUrl) return;
-    const nodeId = `layer-${id}-${Date.now().toString(36)}`;
-    const node: CanvasNode = {
-      id: nodeId,
-      type: "layerSplit",
-      position: { x: (position?.x ?? 0) + 380, y: position?.y ?? 0 },
-      data: { kind: "layerSplit", sourceImageUrl: data.imageUrl, layers: [] },
-      stale: false,
-    };
-    upsertNode(node);
-    const edge: CanvasEdge = { id: `e-${id}-${nodeId}`, type: "dataflow", source: id, target: nodeId };
-    addEdge(edge);
-  };
+  const [uploadError,setUploadError]=useState('');
+  const [uploading,setUploading]=useState(false);
+  const upload=async(slot?:typeof SLOT_KEYS[number])=>{setUploading(true);setUploadError('');try{const [file]=await chooseFiles('image/*',false);if(!file)return;const asset=await uploadAsset(file);patchNodeData(id,slot?{referenceSlots:{...data.referenceSlots,[slot]:asset.url}}:{imageUrl:asset.url});}catch(e){setUploadError((e as Error).message);}finally{setUploading(false);}};
 
   const compiled = compileImagePrompt(data.imagePromptAST);
   const hasImage = !!data.imageUrl;
@@ -79,13 +64,13 @@ export default function ShotImageNode(props: NodeProps) {
       width={340}
     >
       <div className="wx-media">
-        <span className="wx-media-badge">AI生成</span>
+        <span className="wx-media-badge">图片素材</span>
         {hasImage ? <img src={data.imageUrl} alt={`分镜 ${data.shotNo}`} /> : <div className="wx-empty-media"><StudioIcon name="shotImage" /><span>选中节点，设置分镜画面</span></div>}
       </div>
       <NodeQuickToolbar visible={!!selected && inspectorId !== id}>
         <button onClick={() => openInspector(id)}>精修画面</button>
-        <button onClick={() => openGridSplitter(id)} disabled={!hasImage}>宫格切分</button>
-        <button onClick={layerSplit} disabled={!hasImage}>图层分离</button>
+        <button disabled={uploading} onClick={()=>void upload()}>上传 / 替换</button>
+        {data.imageUrl&&<button onClick={()=>void downloadMedia(data.imageUrl!).catch(e=>setUploadError((e as Error).message))}>下载图片</button>}
       </NodeQuickToolbar>
       <NodeParameterPanel visible={!!selected && inspectorId !== id}>
       <div className="space-y-3">
@@ -238,21 +223,17 @@ export default function ShotImageNode(props: NodeProps) {
                   ) : (
                     <span className="text-[11px] text-[var(--wx-text-3)]">未绑定</span>
                   )}
+                  <button className={btnCls} disabled={uploading} onClick={()=>void upload(k)}>{url?'替换':'上传'}</button>
+                  {url&&<button className={btnCls} onClick={()=>{const next={...data.referenceSlots};delete next[k];patchNodeData(id,{referenceSlots:next});}}>移除</button>}
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* 操作按钮 */}
-        <div className="flex gap-1.5">
-          <button className={`${btnCls} flex-1`} onClick={() => openGridSplitter(id)} disabled={!hasImage} title={hasImage ? "打开宫格切分器" : "需要先有分镜图"}>
-            宫格切分
-          </button>
-          <button className={`${btnCls} flex-1`} onClick={layerSplit} disabled={!hasImage} title={hasImage ? "创建图层分离节点" : "需要先有分镜图"}>
-            图层分离
-          </button>
-        </div>
+        {uploadError&&<p className="wx-error" role="alert">{uploadError}</p>}
+        <button className={`${btnCls} w-full`} disabled title="图像生成参数与结果提取尚未完成实测">生成图片 · 通路待验证</button>
+        <p className="text-[11px] text-[var(--wx-text-3)]">可编辑、上传及绑定参考图。Dola 图像生成尚未验通，当前不会提交请求。</p>
       </div>
       </NodeParameterPanel>
     </NodeShell>

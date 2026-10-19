@@ -14,13 +14,13 @@ export function NodeShell({ id, title, stale, selected, showTarget = true, showS
   const specification = node?.data.kind === "shotImage" ? `${node.data.previewSize.w} × ${node.data.previewSize.h}` : node?.data.kind === "videoGen" ? "Dola" : "";
   return <div className={`wx-node ${selected ? "is-selected" : ""}`} data-media={media} style={{ width }}>
     <div className="wx-node-heading">
-      <StudioIcon name={node?.type ?? "settings"} /><strong>{title}</strong>
+      <StudioIcon name={node?.type ?? "settings"} /><strong>{node?.label || title}</strong>
       <span className="ml-auto whitespace-nowrap text-[11px]">{specification}</span>
       {stale && <span className="rounded-full bg-[var(--wx-warning)]/10 px-2 py-0.5 text-[11px] text-[var(--wx-warning)]">待更新</span>}
       <button className="nodrag rounded px-1 text-[var(--wx-text-3)] hover:text-[var(--wx-danger)]" title="删除节点" aria-label={`删除${title}`} onClick={(e) => { e.stopPropagation(); removeNodes([id]); }}>×</button>
     </div>
     {showTarget && <Handle type="target" position={Position.Left}>+</Handle>}
-    <div className="nodrag wx-node-content">{children}</div>
+    <div className="nodrag nowheel wx-node-content">{children}</div>
     {showSource && <Handle type="source" position={Position.Right}>+</Handle>}
   </div>;
 }

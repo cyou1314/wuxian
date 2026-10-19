@@ -4,6 +4,7 @@
  * ScriptEditorNode — 剧本原创与改编节点
  * 原创/改编双文本编辑、冲突改写对比、伏笔关联、一键推送拆镜生成分镜表节点。
  */
+import {dolaEngine} from "@/lib/engines/dola";
 import { useState } from "react";
 import type { NodeProps } from "@xyflow/react";
 import { NodeShell } from "./NodeShell";
@@ -69,6 +70,10 @@ export default function ScriptEditorNode(props: NodeProps) {
   const upsertNode = useCanvasStore((s) => s.upsertNode);
   const addEdge = useCanvasStore((s) => s.addEdge);
 
+  const [aiBusy,setAiBusy]=useState(false),[aiError,setAiError]=useState('');
+  const ai=async(mode:'扩写'|'改写')=>{const text=data.adapted||data.original;if(!text.trim()||aiBusy)return;
+    if(!window.confirm(`将剧本文本发送给 Dola 进行${mode}，可能消耗额度。继续？`))return;
+    setAiBusy(true);setAiError('');try{const reply=await dolaEngine.chat([{role:'user',content:`请${mode}以下短剧剧本，保持人物和核心事件，只返回剧本正文：\n${text}`}]);patchNodeData(id,{adapted:reply});}catch(e){setAiError((e as Error).message);}finally{setAiBusy(false);}};
   const [confBefore, setConfBefore] = useState("");
   const [confAfter, setConfAfter] = useState("");
   const [foreText, setForeText] = useState("");
@@ -172,6 +177,7 @@ export default function ScriptEditorNode(props: NodeProps) {
           />
         </div>
 
+        <div className="flex gap-2"><button className={btnCls} disabled={aiBusy||!(data.original||data.adapted).trim()} onClick={()=>void ai('扩写')}>Dola 扩写</button><button className={btnCls} disabled={aiBusy||!(data.original||data.adapted).trim()} onClick={()=>void ai('改写')}>Dola 改写</button></div>{aiBusy&&<p>等待 Dola 回复…</p>}{aiError&&<p className="wx-error">{aiError}</p>}
         <div className="border-t border-[var(--wx-border)] pt-2">
           <div className="mb-1 text-[11px] font-medium text-[var(--wx-text-2)]">
             冲突改写对比（{data.conflicts.filter((c) => c.resolved).length}/{data.conflicts.length} 已采用）

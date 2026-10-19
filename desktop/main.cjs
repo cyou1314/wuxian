@@ -6,10 +6,12 @@ const http = require('node:http');
 const { randomBytes } = require('node:crypto');
 const { readProject, writeProject } = require('./project.cjs');
 const { createAccounts } = require('./accounts.cjs');
+const { createMedia } = require('./media.cjs');
 
 let window;
 let server;
 let origin;
+const accessKey = randomBytes(32).toString('hex');
 let currentFile = null;
 let closing = false;
 let rendererReady = false;
@@ -53,7 +55,7 @@ async function startServer() {
     cwd: app.getPath('userData'),
     env: { ...process.env, NODE_ENV: 'production', HOSTNAME: '127.0.0.1', PORT: String(port),
       WUXIAN_DATA_DIR: path.join(app.getPath('userData'), 'server-data'),
-      LIBTV_ACCESS_KEY: randomBytes(32).toString('hex'), NEXT_TELEMETRY_DISABLED: '1' },
+      LIBTV_ACCESS_KEY: accessKey, NEXT_TELEMETRY_DISABLED: '1' },
     stdio: 'pipe',
   });
   // Drain output without logging user content or credentials.
@@ -76,8 +78,14 @@ function installMenu() {
       { label: '另存为…', accelerator: 'CmdOrCtrl+Shift+S', click: () => command('saveAs') },
       { type: 'separator' }, { role: mac ? 'close' : 'quit' },
     ] },
-    { role: 'editMenu' },
-    { label: '视图', submenu: [{ role: 'togglefullscreen' }, { role: 'resetZoom' }, { role: 'zoomIn' }, { role: 'zoomOut' }] },
+    { label: '编辑', submenu: [
+      { label: '撤销', accelerator: 'CmdOrCtrl+Z', click: () => command('edit-undo') },
+      { label: '重做', accelerator: 'CmdOrCtrl+Shift+Z', click: () => command('edit-redo') },
+      { type: 'separator' }, { role: 'cut' },
+      { label: '复制', accelerator: 'CmdOrCtrl+C', click: () => command('edit-copy') },
+      { label: '粘贴', accelerator: 'CmdOrCtrl+V', click: () => command('edit-paste') }, { role: 'selectAll' },
+    ] },
+    { label: '视图', submenu: [{ role: 'togglefullscreen' }, { label:'适应画布', accelerator:'CmdOrCtrl+0', click:()=>command('canvas-zoom-fit') }, { label:'放大画布', accelerator:'CmdOrCtrl+=', click:()=>command('canvas-zoom-in') }, { label:'缩小画布', accelerator:'CmdOrCtrl+-', click:()=>command('canvas-zoom-out') }] },
     { role: 'windowMenu' },
   ]));
 }
@@ -107,6 +115,12 @@ async function createWindow() {
   window.show();
 }
 function registerProjects() {
+  handle('media:download', (value) => {
+    if(typeof value !== 'string' || value.length>8192) throw new Error('下载地址无效');
+    const url=new URL(value,origin);
+    if(url.username||url.password||!(url.protocol==='https:'||(url.origin===origin&&url.pathname==='/api/openapi/file/upload'))) throw new Error('不支持此下载地址');
+    window.webContents.downloadURL(url.href);
+  });
   handle('desktop:ready', () => { rendererReady = true; });
   handle('project:recovery', async () => {
     try { return await readProject(recoveryFile()); }
@@ -148,6 +162,7 @@ else {
     await fs.mkdir(app.getPath('userData'), { recursive: true });
     await startServer();
     registerProjects();
+    createMedia({ app, handle, origin, accessKey });
     await createAccounts({ app, handle });
     installMenu();
     await createWindow();

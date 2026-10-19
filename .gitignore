@@ -13,3 +13,6 @@ release/
 
 # Next.js generated type declarations
 next-env.d.ts
+
+# Optional locally supplied FFmpeg executable
+desktop/bin/

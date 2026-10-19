@@ -6,7 +6,7 @@ export function captureProject(): DesktopProject {
   return { format: 'wuxian-project', version: 1, canvas: getCanvasSnapshot(), tasks: useTaskStore.getState().tasks };
 }
 export function restoreProject(project: DesktopProject) {
-  useCanvasStore.setState(project.canvas);
+  useCanvasStore.setState({ ...project.canvas, assets: project.canvas.assets ?? [] });
   useCanvasStore.temporal.getState().clear();
   useTaskStore.setState({ tasks: project.tasks.map((t) =>
     ['submitting', 'polling', 'generating'].includes(t.status)

@@ -5,6 +5,8 @@ const { randomUUID } = require('node:crypto');
 
 const DOLA_ORIGIN = 'https://www.dola.com';
 const PATHS = new Set(['/samantha/skill/pack', '/chat/completion', '/im/chain/single', '/samantha/video/get_play_info']);
+function authWindowUrl(value) { try { const url=new URL(value); return url.protocol==='https:' || url.href==='about:blank'; } catch { return false; } }
+function browserUserAgent(value) { return value.replace(/\b(?:Electron|Xan|wuxian)\/[\w.-]+\s?/gi, ''); }
 async function createAccounts({ app, handle }) {
   const file = path.join(app.getPath('userData'), 'dola-accounts.json');
   let accounts = [];
@@ -27,15 +29,28 @@ async function createAccounts({ app, handle }) {
     let win = windows.get(id);
     if (win && !win.isDestroyed()) { if (visible) { win.show(); win.focus(); } return win; }
     const accountSession = session.fromPartition(`persist:dola-${id}`);
+    // Keep Chromium's real version and omit app-specific tokens for browser compatibility.
+    accountSession.setUserAgent(browserUserAgent(accountSession.getUserAgent()));
     accountSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
     win = new BrowserWindow({ width: 1100, height: 820, show: visible, title: 'Dola 账号登录',
       webPreferences: { partition: `persist:dola-${id}`, nodeIntegration: false, contextIsolation: true, sandbox: true },
     });
     windows.set(id, win);
-    win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    win.webContents.on('will-navigate', (event, url) => { if (!url.startsWith('https://')) event.preventDefault(); });
+    const configureAuthWindow = (target) => {
+      target.webContents.setWindowOpenHandler(({ url }) => {
+        if(!authWindowUrl(url)) return {action:'deny'};
+        return {action:'allow',overrideBrowserWindowOptions:{width:620,height:800,parent:win,autoHideMenuBar:true,
+          webPreferences:{partition:`persist:dola-${id}`,nodeIntegration:false,contextIsolation:true,sandbox:true}}};
+      });
+      target.webContents.on('did-create-window', (child) => configureAuthWindow(child));
+      target.webContents.on('will-navigate', (event, url) => { if(!url.startsWith('https://')) event.preventDefault(); });
+    };
+    configureAuthWindow(win);
+    win.webContents.on('did-fail-load', (_event, code, _description, _url, mainFrame) => {
+      if(mainFrame && code!==-3) win.setTitle(`Dola 页面加载失败（${code}）· 请关闭窗口后重新打开`);
+    });
     win.on('closed', () => windows.delete(id));
-    win.loadURL(`${DOLA_ORIGIN}/chat/`).catch(() => {});
+    win.loadURL(`${DOLA_ORIGIN}/chat/`).catch(() => { if(!win.isDestroyed()) win.setTitle('Dola 页面无法加载 · 请关闭窗口后重新打开'); });
     return win;
   }
   handle('dola:accounts', () => accounts.map((a) => ({ ...a })));
@@ -91,4 +106,4 @@ async function createAccounts({ app, handle }) {
     })()`);
   });
 }
-module.exports = { createAccounts };
+module.exports = { createAccounts, authWindowUrl, browserUserAgent };

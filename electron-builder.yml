@@ -10,9 +10,12 @@ files:
   - preload.cjs
   - project.cjs
   - accounts.cjs
+  - media.cjs
   - package.json
   - '!node_modules/**/*'
 extraResources:
+  - from: desktop/bin
+    to: media
   - from: .next/standalone
     to: web
     filter:

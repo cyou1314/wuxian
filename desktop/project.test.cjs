@@ -42,3 +42,14 @@ test('malformed files are reported rather than silently replaced', async () => {
     assert.equal(await fs.readFile(file, 'utf8'), '{broken');
   } finally { await fs.rm(dir, { recursive: true, force: true }); }
 });
+test('v2 text, director, group and asset index round trip without losing old nodes', async () => {
+ const project=fixture();project.canvas.graph.nodes.push(
+  {id:'text',type:'text',label:'写作笔记',position:{x:1,y:2},data:{kind:'text',text:'保留中文及换行\n第二行'}},
+  {id:'director',type:'director',position:{x:30,y:50},data:{kind:'director',messages:[{role:'user',content:'@写作笔记 请扩写'}]}},
+  {id:'group',type:'group',position:{x:0,y:0},width:700,height:500,data:{kind:'group',memberIds:['text','director']}}
+ );project.canvas.assets=[{id:'a',name:'参考图.png',kind:'image',source:'upload',url:'data:image/png;base64,AA==',createdAt:1}];
+ const dir=await fs.mkdtemp(path.join(os.tmpdir(),'xan-v2-'));try{const file=path.join(dir,'share.wuxian');await writeProject(file,project);assert.deepEqual(await readProject(file),project);
+ const invalid=structuredClone(project);invalid.canvas.graph.nodes.at(-1).height=-1;assert.throws(()=>validateProject(invalid),/尺寸/);
+ invalid.canvas.graph.nodes.at(-1).height=500;invalid.canvas.assets[0].source='unverified';assert.throws(()=>validateProject(invalid),/资产/);
+ }finally{await fs.rm(dir,{recursive:true,force:true});}
+});

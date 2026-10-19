@@ -25,7 +25,10 @@ export type LibTVNodeType =
   | "videoGen"
   | "layerSplit"
   | "threeDBox"
-  | "smartClip";
+  | "smartClip"
+  | "text"
+  | "director"
+  | "group";
 
 /** 2 种边类型：数据流边 / AutoLink @引用虚线边 */
 export type LibTVEdgeType = "dataflow" | "autolink";
@@ -279,6 +282,10 @@ export interface SmartClipNodeData {
   bgmCuePoints: number[];
 }
 
+export interface TextNodeData { text: string }
+export interface DirectorNodeData { messages: Array<{ role: "user" | "assistant"; content: string }> }
+export interface GroupNodeData { memberIds: string[] }
+
 export type CanvasNodeData =
   | ({ kind: "roleStudio" } & RoleStudioNodeData)
   | ({ kind: "scriptEditor" } & ScriptEditorNodeData)
@@ -287,9 +294,13 @@ export type CanvasNodeData =
   | ({ kind: "videoGen" } & VideoGenNodeData)
   | ({ kind: "layerSplit" } & LayerSplitNodeData)
   | ({ kind: "threeDBox" } & ThreeDBoxNodeData)
-  | ({ kind: "smartClip" } & SmartClipNodeData);
+  | ({ kind: "smartClip" } & SmartClipNodeData)
+  | ({ kind: "text" } & TextNodeData)
+  | ({ kind: "director" } & DirectorNodeData)
+  | ({ kind: "group" } & GroupNodeData);
 
 export interface CanvasNode {
+  label?: string;
   id: string;
   type: LibTVNodeType;
   position: Vec2;

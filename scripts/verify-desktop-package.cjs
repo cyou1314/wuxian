@@ -4,6 +4,7 @@ module.exports = async function verifyDesktopPackage(context) {
   const resources = context.electronPlatformName === 'darwin'
     ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, 'Contents', 'Resources')
     : path.join(context.appOutDir, 'resources');
+  if(process.env.XAN_FFMPEG_PATH) await fs.access(path.join(resources,'media',process.platform==='win32'?'ffmpeg.exe':'ffmpeg'));
   const web = path.join(resources, 'web');
   // electron-builder excludes a mapping's root node_modules. Keep this check
   // so future resource filter changes cannot silently ship an unbootable app.

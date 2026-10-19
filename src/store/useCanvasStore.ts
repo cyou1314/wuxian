@@ -33,6 +33,7 @@ import { markStale } from "@/lib/dag-scheduler";
 // ---------------------------------------------------------------------------
 
 export interface CanvasSnapshot {
+  assets?: import("@/lib/studio-types").StudioAsset[];
   graph: CanvasGraph;
   characters: CharacterAsset[];
   storyboardRows: StoryboardRow[];
@@ -47,6 +48,7 @@ export function getCanvasSnapshot(): CanvasSnapshot {
 
 function pickSnapshot(s: CanvasStore): CanvasSnapshot {
   return {
+    assets: s.assets ?? [],
     graph: s.graph,
     characters: s.characters,
     storyboardRows: s.storyboardRows,
@@ -109,6 +111,7 @@ function newId(prefix: string): string {
 export const useCanvasStore = create<CanvasStore>()(
   temporal(
     immer((set, get) => ({
+      assets: [],
       graph: seed.graph,
       characters: SEED_CHARACTERS,
       storyboardRows: seed.rows,

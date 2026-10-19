@@ -8,6 +8,9 @@ const list = (v, check) => Array.isArray(v) && v.every(check);
 const row = (v) => strings(v, ['shotNo', 'description', 'char1Name', 'char1Desc', 'char1Image', 'char2Name', 'char2Desc', 'char2Image', 'reference', 'shotSize', 'emotion', 'lighting', 'sfx', 'dialogue', 'imagePrompt', 'videoMotionPrompt']) && Number.isFinite(v.duration);
 function validNodeData(type, d) {
   switch (type) {
+    case 'text': return strings(d, ['text']);
+    case 'director': return list(d.messages, (m) => strings(m, ['role', 'content']) && ['user', 'assistant'].includes(m.role));
+    case 'group': return list(d.memberIds, (id) => typeof id === 'string');
     case 'roleStudio': return strings(d, ['characterId']) && object(d.views);
     case 'scriptEditor': return strings(d, ['original', 'adapted']) && list(d.conflicts, (x) => strings(x, ['id', 'before', 'after'])) && list(d.foreshadows, (x) => strings(x, ['id', 'text']));
     case 'storyboardTable': return list(d.rows, row) && typeof d.approved === 'boolean';
@@ -40,13 +43,15 @@ function validateProject(value) {
       !Object.values(s.breakdowns).every((notes) => ['narrative', 'camera', 'action', 'audio'].every((k) => list(notes?.[k], (n) => strings(n, ['id', 'text']) && Number.isFinite(n.timeMs))))) {
     throw new Error('项目角色、分镜、会话或拉片数据无效');
   }
-  const kinds = new Set(['roleStudio', 'scriptEditor', 'storyboardTable', 'shotImage', 'videoGen', 'layerSplit', 'threeDBox', 'smartClip']);
+  if (s.assets !== undefined && !list(s.assets, (a) => strings(a, ['id','name','url','kind','source']) && ['image','video'].includes(a.kind) && ['upload','generated','local'].includes(a.source) && Number.isFinite(a.createdAt))) throw new Error('资产索引无效');
+  const kinds = new Set(['roleStudio', 'scriptEditor', 'storyboardTable', 'shotImage', 'videoGen', 'layerSplit', 'threeDBox', 'smartClip', 'text', 'director', 'group']);
   const ids = new Set();
   for (const n of s.graph.nodes) {
     if (!n || typeof n.id !== 'string' || ids.has(n.id) || !kinds.has(n.type) ||
         n.data?.kind !== n.type || !Number.isFinite(n.position?.x) || !Number.isFinite(n.position?.y)) {
       throw new Error('项目含无效或重复节点');
     }
+    if ((n.label !== undefined && typeof n.label !== 'string') || ['width','height'].some(k=>n[k] !== undefined && (!Number.isFinite(n[k]) || n[k] <= 0 || n[k] > 100000))) throw new Error('节点名称或尺寸无效');
     if (!validNodeData(n.type, n.data)) throw new Error('项目节点内容不完整');
     ids.add(n.id);
   }

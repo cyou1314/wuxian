@@ -14,5 +14,5 @@ export default function NodeParameterPanel({ visible, children }: { visible: boo
     window.addEventListener("resize", resize);
     return () => { cancelAnimationFrame(frame); window.removeEventListener("resize", resize); };
   }, [visible, x, y, zoom]);
-  return <NodeToolbar isVisible={visible} position={Position.Bottom} offset={14}><div ref={ref} className="wx-parameters nodrag nopan" style={{ maxHeight: height }} onDoubleClick={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>{children}</div></NodeToolbar>;
+  return <NodeToolbar isVisible={visible} position={Position.Bottom} offset={14}><div ref={ref} className="wx-parameters nodrag nopan nowheel" style={{ maxHeight: height }} onDoubleClick={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>{children}</div></NodeToolbar>;
 }
