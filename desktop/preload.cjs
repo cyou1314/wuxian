@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('wuxianDesktop', {
   platform: process.platform,
+  openGeneration: input => ipcRenderer.invoke('dola:open-generation', input),
+  generationStatus: id => ipcRenderer.invoke('dola:generation-status', id),
   upload: (file) => ipcRenderer.invoke('asset:upload', file),
   downloadMedia: (url) => ipcRenderer.invoke('media:download', url),
   mediaCapabilities: () => ipcRenderer.invoke('media:capabilities'),

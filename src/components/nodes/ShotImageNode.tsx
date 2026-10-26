@@ -8,6 +8,7 @@
 import {useState} from "react";
 import {chooseFiles,uploadAsset,downloadMedia} from "@/lib/studio-upload";
 import type { NodeProps } from "@xyflow/react";
+import WebGenerationButton from "../canvas/WebGenerationButton";
 import NodeParameterPanel from "../canvas/NodeParameterPanel";
 import NodeQuickToolbar from "../canvas/NodeQuickToolbar";
 import StudioIcon from "../ui/StudioIcon";
@@ -232,8 +233,8 @@ export default function ShotImageNode(props: NodeProps) {
         </div>
 
         {uploadError&&<p className="wx-error" role="alert">{uploadError}</p>}
-        <button className={`${btnCls} w-full`} disabled title="图像生成参数与结果提取尚未完成实测">生成图片 · 通路待验证</button>
-        <p className="text-[11px] text-[var(--wx-text-3)]">可编辑、上传及绑定参考图。Dola 图像生成尚未验通，当前不会提交请求。</p>
+        <WebGenerationButton nodeId={id} kind="image" prompt={data.rawPrompt?(data.rawText??""):compiled}/>
+        <p className="text-[11px] text-[var(--wx-text-3)]">可编辑、上传及绑定参考图。官网模式使用 Dola 的原生生成与下载；接口模式参数尚待验证。参考图请在官网补充上传。</p>
       </div>
       </NodeParameterPanel>
     </NodeShell>

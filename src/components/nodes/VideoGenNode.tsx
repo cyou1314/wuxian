@@ -9,6 +9,7 @@ import type { NodeProps } from "@xyflow/react";
 import NodeParameterPanel from "../canvas/NodeParameterPanel";
 import NodeQuickToolbar from "../canvas/NodeQuickToolbar";
 import StudioIcon from "../ui/StudioIcon";
+import WebGenerationButton from "../canvas/WebGenerationButton";
 import VideoTools from "../canvas/VideoTools";
 import { NodeShell } from "./NodeShell";
 import { useCanvasStore } from "@/store/useCanvasStore";
@@ -129,6 +130,7 @@ export default function VideoGenNode(props: NodeProps) {
       </NodeQuickToolbar>
       <NodeParameterPanel visible={!!selected && inspectorId !== id}>
       <div>
+        <WebGenerationButton nodeId={id} kind="video" prompt={resolveVideoMotionPrompt({ast:data.motionAST,rawText:data.rawText},{rawPrompt:data.rawPrompt}).resolved} model={params.model} duration={params.durationSec} ratio={params.ratio}/>
         <div className="wx-parameter-title"><StudioIcon name="videoGen" /><span>运动参数</span><span className="ml-auto">Dola · {params.ratio}</span></div>
         <label className="mb-3 block text-[var(--wx-text-2)]">主体动作
           <textarea className={`${inputCls} mt-2 min-h-20 resize-y`} value={data.motionAST.subjectAction} onChange={(e) => setMotion("subjectAction", e.target.value)} onBlur={() => touchNode(id)} placeholder="描述动作、节奏和画面变化…" />

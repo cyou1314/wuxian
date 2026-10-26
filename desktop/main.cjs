@@ -68,6 +68,12 @@ async function startServer() {
   await waitForServer(origin);
 }
 function command(name) { if (rendererReady) window?.webContents.send('desktop:command', name); }
+async function nativeEdit(action) {
+  const focused=BrowserWindow.getFocusedWindow();if(!focused)return;
+  if(focused!==window){focused.webContents[action]();return;}
+  const editing=await focused.webContents.executeJavaScript(`(()=>{const e=document.activeElement;return e instanceof HTMLInputElement || e instanceof HTMLTextAreaElement || Boolean(e?.isContentEditable);})()`);
+  if(editing)focused.webContents[action]();else command(`edit-${action}`);
+}
 function installMenu() {
   const mac = process.platform === 'darwin';
   Menu.setApplicationMenu(Menu.buildFromTemplate([
@@ -79,11 +85,11 @@ function installMenu() {
       { type: 'separator' }, { role: mac ? 'close' : 'quit' },
     ] },
     { label: '编辑', submenu: [
-      { label: '撤销', accelerator: 'CmdOrCtrl+Z', click: () => command('edit-undo') },
-      { label: '重做', accelerator: 'CmdOrCtrl+Shift+Z', click: () => command('edit-redo') },
+      { label: '撤销', accelerator: 'CmdOrCtrl+Z', click: () => void nativeEdit('undo') },
+      { label: '重做', accelerator: 'CmdOrCtrl+Shift+Z', click: () => void nativeEdit('redo') },
       { type: 'separator' }, { role: 'cut' },
-      { label: '复制', accelerator: 'CmdOrCtrl+C', click: () => command('edit-copy') },
-      { label: '粘贴', accelerator: 'CmdOrCtrl+V', click: () => command('edit-paste') }, { role: 'selectAll' },
+      { label: '复制', accelerator: 'CmdOrCtrl+C', click: () => void nativeEdit('copy') },
+      { label: '粘贴', accelerator: 'CmdOrCtrl+V', click: () => void nativeEdit('paste') }, { role: 'selectAll' },
     ] },
     { label: '视图', submenu: [{ role: 'togglefullscreen' }, { label:'适应画布', accelerator:'CmdOrCtrl+0', click:()=>command('canvas-zoom-fit') }, { label:'放大画布', accelerator:'CmdOrCtrl+=', click:()=>command('canvas-zoom-in') }, { label:'缩小画布', accelerator:'CmdOrCtrl+-', click:()=>command('canvas-zoom-out') }] },
     { role: 'windowMenu' },
@@ -163,7 +169,10 @@ else {
     await startServer();
     registerProjects();
     createMedia({ app, handle, origin, accessKey });
-    await createAccounts({ app, handle });
+    await createAccounts({ app, handle, signRequest: async (requestPath) => {
+      const response=await fetch(`${origin}/api/dola/sign`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${accessKey}`},body:JSON.stringify({path:requestPath}),signal:AbortSignal.timeout(15000)});
+      const result=await response.json();if(!response.ok||typeof result.url!=='string')throw new Error(result.error||'本机签名失败');return result.url;
+    } });
     installMenu();
     await createWindow();
     app.on('activate', () => { if (!window) void createWindow(); });

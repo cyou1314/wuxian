@@ -10,6 +10,8 @@ export interface DesktopProject {
 export interface DesktopAccount { id: string; label: string }
 export interface DesktopBridge {
   platform: string;
+  openGeneration(input: import("@/lib/studio-types").WebGenerationInput): Promise<{id:string;accountId:string}>;
+  generationStatus(id:string): Promise<import("@/lib/studio-types").WebGenerationStatus>;
   upload(file: { name: string; type: string; bytes: ArrayBuffer }): Promise<{ url: string }>;
   downloadMedia(url: string): Promise<void>;
   mediaCapabilities(): Promise<{ ffmpeg: boolean }>;

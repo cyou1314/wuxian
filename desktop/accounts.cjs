@@ -2,12 +2,22 @@ const { BrowserWindow, session } = require('electron');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
+const { registerWebGeneration } = require('./web-generation.cjs');
 
 const DOLA_ORIGIN = 'https://www.dola.com';
 const PATHS = new Set(['/samantha/skill/pack', '/chat/completion', '/im/chain/single', '/samantha/video/get_play_info']);
 function authWindowUrl(value) { try { const url=new URL(value); return url.protocol==='https:' || url.href==='about:blank'; } catch { return false; } }
 function browserUserAgent(value) { return value.replace(/\b(?:Electron|Xan|wuxian)\/[\w.-]+\s?/gi, ''); }
-async function createAccounts({ app, handle }) {
+function protocolShape(value, key='', depth=0) {
+  if(depth>10)return '[depth]';if(/cookie|token|authorization|secret/i.test(key))return '[redacted]';
+  if(key==='ability_param'&&typeof value==='string'){try{return {serialized:protocolShape(JSON.parse(value),'',depth+1)};}catch{return '[string]';}}
+  if(Array.isArray(value))return value.slice(0,2).map(v=>protocolShape(v,'',depth+1));
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,protocolShape(v,k,depth+1)]));
+  if(value===null||typeof value==='boolean')return value;
+  if(['model','duration','ratio','style','ability_type','skill_type','block_type','type','message_type'].includes(key))return value;
+  return `[${typeof value}]`;
+}
+async function createAccounts({ app, handle, signRequest }) {
   const file = path.join(app.getPath('userData'), 'dola-accounts.json');
   let accounts = [];
   try {
@@ -31,6 +41,13 @@ async function createAccounts({ app, handle }) {
     const accountSession = session.fromPartition(`persist:dola-${id}`);
     // Keep Chromium's real version and omit app-specific tokens for browser compatibility.
     accountSession.setUserAgent(browserUserAgent(accountSession.getUserAgent()));
+    // Diagnostic schema only: never store headers, URL values, text, IDs or credentials.
+    accountSession.webRequest.onBeforeRequest({urls:[`${DOLA_ORIGIN}/chat/completion*`]},(details,callback)=>{
+      try {const bytes=Buffer.concat((details.uploadData??[]).flatMap(x=>x.bytes?[x.bytes]:[]));const url=new URL(details.url);
+        const shape={queryKeys:[...url.searchParams.keys()],body:protocolShape(JSON.parse(bytes.toString()))};
+        void fs.writeFile(path.join(app.getPath('userData'),'dola-request-shape.json'),JSON.stringify(shape,null,2),{mode:0o600}).catch(()=>{});
+      }catch{}callback({});
+    });
     accountSession.setPermissionRequestHandler((_wc, _permission, callback) => callback(false));
     win = new BrowserWindow({ width: 1100, height: 820, show: visible, title: 'Dola 账号登录',
       webPreferences: { partition: `persist:dola-${id}`, nodeIntegration: false, contextIsolation: true, sandbox: true },
@@ -50,9 +67,10 @@ async function createAccounts({ app, handle }) {
       if(mainFrame && code!==-3) win.setTitle(`Dola 页面加载失败（${code}）· 请关闭窗口后重新打开`);
     });
     win.on('closed', () => windows.delete(id));
-    win.loadURL(`${DOLA_ORIGIN}/chat/`).catch(() => { if(!win.isDestroyed()) win.setTitle('Dola 页面无法加载 · 请关闭窗口后重新打开'); });
+    win.loadURL(`${DOLA_ORIGIN}/chat/`).catch(error => { if(error.code!==-3 && !String(error.message).includes('ERR_ABORTED') && !win.isDestroyed()) win.setTitle('Dola 页面无法加载 · 请关闭窗口后重新打开'); });
     return win;
   }
+  registerWebGeneration({app,handle,accountWindow,accounts:()=>accounts});
   handle('dola:accounts', () => accounts.map((a) => ({ ...a })));
   handle('dola:login', async (id, label) => {
     if (id) {
@@ -96,9 +114,23 @@ async function createAccounts({ app, handle }) {
       });
     }
     if (new URL(win.webContents.getURL()).origin !== DOLA_ORIGIN) throw new Error('请先在该账号窗口完成 Dola 登录');
+    let target=`${DOLA_ORIGIN}${requestPath}`;
+    if(requestPath==='/chat/completion') {
+      try {
+        const present=await win.webContents.executeJavaScript(`Boolean(window.byted_acrawler?.frontierSign)`);
+        if(!present) {
+          const root=app.isPackaged?path.join(process.resourcesPath,'web'):path.join(__dirname,'..');
+          const parts=await Promise.all(Array.from({length:4},(_,i)=>fs.readFile(path.join(root,'src/lib/vendor',`webmssdk_1.0.0.44.part${i}.js`),'utf8')));
+          await win.webContents.executeJavaScript(parts.join(''));
+        }
+        target=await win.webContents.executeJavaScript(`(()=>{const url=${JSON.stringify(target)};const result=window.byted_acrawler.frontierSign(url);const signature=result['X-Bogus']||result.a_bogus;if(!signature)throw new Error('页面签名为空');return url+'?a_bogus='+encodeURIComponent(signature);})()`);
+      }catch { target=await signRequest(requestPath); }
+    }
+    const targetUrl = new URL(target);
+    if(targetUrl.origin!==DOLA_ORIGIN || targetUrl.pathname!==requestPath) throw new Error('签名地址无效');
     // Only fixed same-origin endpoints; never expose JS execution or cookies to the canvas.
     return win.webContents.executeJavaScript(`(async () => {
-      const response = await fetch(${JSON.stringify(requestPath)}, {
+      const response = await fetch(${JSON.stringify(target)}, {
         method: 'POST', credentials: 'include', headers: {'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream'},
         body: ${JSON.stringify(body)}, signal: AbortSignal.timeout(60000)
       });
@@ -106,4 +138,4 @@ async function createAccounts({ app, handle }) {
     })()`);
   });
 }
-module.exports = { createAccounts, authWindowUrl, browserUserAgent };
+module.exports = { createAccounts, authWindowUrl, browserUserAgent, protocolShape };

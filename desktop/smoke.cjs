@@ -62,6 +62,7 @@ app.on('browser-window-created', (_event, win) => {
         await run(`document.querySelector('[aria-label="关闭添加节点"]').click()`);
         const uploaded=await run(`(async()=>{const bytes=Uint8Array.from(atob('${png}'),c=>c.charCodeAt(0));const result=await window.wuxianDesktop.upload({name:'test.png',type:'image/png',bytes:bytes.buffer});const response=await fetch(result.url);return {keys:Object.keys(result),ok:response.ok,mime:response.headers.get('content-type')};})()`);
         assert.deepEqual(uploaded,{keys:['url'],ok:true,mime:'image/png'});
+        assert.equal(await run(`fetch('/api/dola/sign',{method:'POST'}).then(r=>r.status)`),401,'signer must require private main-process authentication');
         assert.equal(await run(`fetch('/api/openapi/file/upload',{method:'POST'}).then(r=>r.status)`),401,'upload API requires auth');
         await assert.rejects(run(`window.wuxianDesktop.upload({name:'bad.txt',type:'text/plain',bytes:new ArrayBuffer(1)})`),/仅支持/);
         await run(`(()=>{const data=new DataTransfer();data.items.add(new File([Uint8Array.from(atob('${png}'),c=>c.charCodeAt(0))],'drop.png',{type:'image/png'}));document.querySelector('.react-flow__pane').dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:data,clientX:700,clientY:350}));})()`);
